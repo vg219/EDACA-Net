@@ -1,0 +1,81 @@
+optimizer:
+  # adam cfg
+  name: adamw
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  betas: [0.9, 0.95]
+  fused: yes
+  eps: 1.0e-8
+
+lr_scheduler:
+  name: plateau
+  factor: 0.8
+  patience: 1
+  threshold: 1.0e-4
+  threshold_mode: rel
+  cooldown: 10
+  min_lr: 2.0e-5
+
+max_norm: 0.04
+ema_decay: 0.999
+ema_update_every: 1
+
+path:
+  med_harvard_base_dir: "/Data3/cao/ZiHanCao/datasets/MedHarvard"
+  m3fd_base_dir: "/Data3/cao/ZiHanCao/datasets/VIF-M3FD"
+
+datasets_cfg:
+  med_harvard:
+    task: SPECT-MRI
+    with_txt_feature: yes
+    with_mask: yes
+    only_resize: [64, 64]
+    reduce_label: yes
+    
+  m3fd:
+    crop_strategy: crop_resize
+    with_txt_feature: false
+    only_resize: [64, 64]
+    fast_eval_n_samples: 80
+    reduce_label: false
+    with_mask: false
+
+network_configs:
+  swinfusion_SwinFusion:
+    upscale: 1
+    img_size: [64, 64]
+    window_size: 8
+    img_range: 1.0
+    depths: [6, 6, 6, 6]
+    embed_dim: 60
+    num_heads: [6, 6, 6, 6]
+    mlp_ratio: 2
+    upsampler: "null"
+    resi_connection: "1conv"
+
+  ## m3fd config (commented out)
+  # swinfusion_m3fd:
+  #   upscale: 1
+  #   img_size: [64, 64]
+  #   window_size: 8
+  #   img_range: 1.0
+  #   depths: [6, 6, 6, 6]
+  #   embed_dim: 60
+  #   num_heads: [6, 6, 6, 6]
+  #   mlp_ratio: 2
+  #   upsampler: "null"
+  #   resi_connection: "1conv"
+
+loss_cfg:
+  u2fusion:
+    loss_weights: [5., 2., 10.]
+
+metric_name_for_save:
+  fusion: val_loss        # for VIF, MFF, MEF tasks
+  check_order:
+    fusion: down
+
+logger_config:
+  base_path: ./log_file/
+  name: SwinFusion
+  file_mode: w

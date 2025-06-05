@@ -1,0 +1,219 @@
+{
+    "blur_removal": {
+      "gaussian_blur": [
+        "Please help remove the gaussian blur from this image",
+        "This photo is too blurry, can you make it clearer?", 
+        "Sharpen this gaussian blurred image",
+        "Fix the soft focus in this picture",
+        "Make this blurry image crystal clear",
+        "Can you remove the gaussian blur effect?",
+        "This image looks out of focus, please fix it",
+        "Restore the sharpness of this blurry photo",
+        "The image is gaussian blurred, please make it sharp",
+        "Remove the blur and make the details clear"
+      ],
+      "motion_blur": [
+        "Remove the motion blur from this photo",
+        "Fix this image that was taken while moving",
+        "Correct the movement blur in this picture", 
+        "Sharpen this motion-blurred shot",
+        "Clear up this photo that's blurred from camera shake",
+        "Stabilize this shaky photo, I am running",
+        "The photo is blurry from movement, please fix it",
+        "Can you remove the motion trails from this image?",
+        "This was taken while moving, make it sharp",
+        "Fix the blur caused by camera movement",
+        "Remove the directional blur from this photo",
+        "The image is motion blurred, please stabilize it"
+      ],
+      "super_resolution": [
+        "Upscale this image to its original resolution",
+        "Make this image look sharper",
+        "Restore the details of this downsampled image", 
+        "Make this blurry image look sharp",
+        "Enhance the resolution of this low quality image",
+        "Can you increase the resolution of this photo?",
+        "This image is too pixelated, please fix it",
+        "Improve the quality of this low-res picture",
+        "Upscale and sharpen this downsampled photo",
+        "Make this low resolution image clearer",
+        "Restore the fine details in this blurry photo",
+        "This image needs more pixels, please enhance it",
+        "Convert this low-res image to high resolution",
+        "Increase the pixel density of this image"
+      ]
+    },
+
+    "noise_effects": {
+      "gaussian_noise": [
+        "Remove the gaussian noise from this image",
+        "Fix the noise in this photo",
+        "Can you remove the noise from this picture?", 
+        "Make this noisy image look clear",
+        "Clean up this noisy image",
+        "This image has too much noise, please fix it",
+        "Remove the grainy noise pattern",
+        "Clean up the static noise in this photo",
+        "Get rid of the random noise artifacts",
+        "Denoise this grainy picture",
+        "Fix the speckled noise in this image",
+        "Remove the random pixel noise",
+        "Clean up this staticky looking photo",
+        "Fix the grainy texture in this image",
+        "Make this noisy photo look smooth"
+      ]
+    },
+
+    "weather_effects": {
+      "rain": [
+        "Remove the rain drops from this image",
+        "Clear up this rainy photo",
+        "Can you edit out the rain from this picture?", 
+        "Make this rainy scene look clear",
+        "Clean up this rain-affected image",
+        "Remove the rain from this image",
+        "Get rid of the rain streaks in this photo",
+        "Fix this image taken in the rain",
+        "Make it look like it wasn't raining",
+        "Clear the raindrops and make it sunny",
+        "Remove the rainy weather effects",
+        "Clean up the rain distortions"
+      ],
+      "snow": [
+        "Remove the snow effects from this photo",
+        "Clear away the snow from this image",
+        "Clean up this snowy picture",
+        "Edit out the snow from this scene",
+        "Make this snowy photo look normal", 
+        "Remove the snow from this image",
+        "Get rid of the snow overlay",
+        "Fix this snow-covered image",
+        "Make it look like a clear day",
+        "Clear the snow and restore the original scene",
+        "Remove the snowy weather effects",
+        "Clean up the snow distortions"
+      ],
+      "haze": [
+        "Remove the haze from this image",
+        "Fix the hazy photo",
+        "Can you remove the haze from this picture?",
+        "Make this hazy image look clear",
+        "Clean up this hazy image",
+        "Clear away the haze and fog",
+        "Dehaze this foggy scene",
+        "Improve visibility in this hazy photo",
+        "Remove the atmospheric haze",
+        "Make this foggy image clearer",
+        "Get rid of the hazy weather effects",
+        "Clear up this misty picture",
+        "Fix the haziness in this image",
+        "Remove the fog and restore clarity",
+        "Clean up the atmospheric distortion"
+      ]
+    },
+  
+    "image_quality": {
+      "jpeg_compression": [
+        "Remove the JPEG compression artifacts",
+        "Clean up these compression blocks", 
+        "Restore this compressed image",
+        "Fix the pixelation in this photo",
+        "Improve the quality of this compressed picture",
+        "Remove the jpeg artifacts from this image",
+        "Enhance this low quality compressed photo",
+        "Clear up the blocky compression artifacts",
+        "Fix the quality loss from JPEG compression",
+        "Remove the blockiness from this compressed image",
+        "Clean up this heavily compressed picture",
+        "Restore the details lost to compression",
+        "Fix these compression distortions",
+        "Remove the compression noise",
+        "Make this compressed photo look clearer"
+      ]
+    },
+  
+    "lighting_adjustment": {
+      "brightness":
+      {
+        "brightening": [
+            "Adjust the brightness of this photo",
+            "Make this dark image brighter", 
+            "Balance the lighting in this picture",
+            "Correct the exposure of this image",
+            "Brighten up this underexposed photo",
+            "Increase the brightness level",
+            "Make the dark areas more visible",
+            "Fix the lighting, it's too dark",
+            "Enhance the brightness of this image",
+            "This photo is too dark, please brighten it"
+        ],
+        "darkening": [
+            "Make this bright image darker",
+            "Darken this overexposed photo",
+            "Reduce the brightness of this image", 
+            "Lower the lighting in this picture",
+            "Decrease the brightness level",
+            "Fix this overexposed image",
+            "Tone down the bright areas",
+            "The image is too bright, please darken it",
+            "Adjust the exposure, it's too bright",
+            "Make the highlights less intense"
+        ]
+      }
+    },
+
+    "contrast": {
+        "low_contrast": [
+            "Improve the contrast of this image",
+            "Make the colors pop more in this photo", 
+            "Fix the flat-looking contrast",
+            "Enhance the contrast between light and dark areas",
+            "Adjust the contrast to make the image more vivid",
+            "Increase the contrast to add depth",
+            "Make the image less washed out",
+            "Boost the contrast to make details stand out",
+            "Fix this low contrast photo",
+            "Add more definition between colors",
+            "Make the image less flat and dull",
+            "Enhance the tonal range",
+            "Bring out more contrast in this image",
+            "Fix the muddy contrast levels",
+            "Make the contrast more dramatic"
+        ],
+        "high_contrast": [
+            "Reduce the contrast of this image",
+            "Make the colors less vibrant in this photo",
+            "Fix the over-contrasted image",
+            "Tone down the harsh contrast",
+            "Soften the contrast levels",
+            "Make the contrast less extreme",
+            "Balance out the strong contrast",
+            "Reduce the intensity of light and dark areas",
+            "Fix this overly contrasty photo",
+            "Make the contrast more natural looking",
+            "Lower the contrast to show more details",
+            "Decrease the contrast between lights and darks",
+            "Fix these harsh contrast levels",
+            "Make the contrast more subtle",
+            "Adjust the overly dramatic contrast"
+        ]
+      },
+    
+    "ambiguous": [
+        "Please, clear up the mess on this image.",
+        "I want this image to look good.",
+        "make it pop",
+        "Fix my photo, it's all messed up.",
+        "Can you make this image better?",
+        "Something's wrong with this picture",
+        "Enhance this photo",
+        "Clean up this image",
+        "This doesn't look right, please fix it",
+        "Make this image look professional",
+        "Improve the quality of this photo",
+        "This picture needs some work",
+        "Touch up this image",
+        "Make this photo look nicer",
+        "Fix whatever's wrong with this"
+    ]
+}

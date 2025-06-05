@@ -1,0 +1,13 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# Example usage: python train.py --data LLVIP.yaml
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: .  # dataset root dir
+train: /Data3/cao/ZiHanCao/datasets/VIF-MSRS/detection/vi  # train images
+val: /Data3/cao/ZiHanCao/ImageFusionBenchmarks/VIF/MSRS_detection/TextIF # val images
+test:  # test images (optional)
+
+# Classes
+## MSRS original class
+nc: 2  # number of classes
+names: ['People', 'Car']  # class names

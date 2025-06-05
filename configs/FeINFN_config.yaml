@@ -1,0 +1,77 @@
+optimizer:
+  name: 'adamw'
+  lr: !!float 2e-4
+  weight_decay: 0.0
+
+lr_scheduler:
+  name: 'cos_anneal'
+  T_max: 300
+  eta_min: !!float 1e-5
+
+max_norm: 1e-4
+ema_decay: 0.995
+ema_update_every: 1
+
+path:
+  wv3_train_path: "/Data2/ZiHanCao/datasets/pansharpening/wv3/training_wv3/train_wv3.h5"
+  wv3_val_path: "/Data2/ZiHanCao/datasets/pansharpening/wv3/reduced_examples/test_wv3_multiExm1.h5"
+  wv3_full_path: "/Data2/ZiHanCao/datasets/pansharpening/pansharpening_test/test_wv3_OrigScale_multiExm1.h5"
+  # wv3_txt_train_path: "/Data2/ZiHanCao/datasets/pansharpening/wv3/training_wv3/t5_feature_wv3_train.safetensors"
+  # wv3_txt_val_path: "/Data2/ZiHanCao/datasets/pansharpening/wv3/reduced_examples/t5_feature_wv3_test_reduced.safetensors"
+  # wv3_txt_full_path: "/Data2/ZiHanCao/datasets/pansharpening/wv3/full_examples/t5_feature_wv3_test_full.safetensors"
+
+  gf2_train_path: "/Data2/ZiHanCao/datasets/pansharpening/gf/training_gf2/train_gf2.h5"
+  gf2_val_path: "/Data2/ZiHanCao/datasets/pansharpening/gf/reduced_examples/test_gf2_multiExm1.h5"
+  gf2_full_path: "/Data2/ZiHanCao/datasets/pansharpening/pansharpening_test/test_gf2_OrigScale_multiExm1.h5"
+  # gf2_txt_train_path: "/Data2/ZiHanCao/datasets/pansharpening/gf/training_gf2/t5_feature_gf2_train.safetensors"
+  # gf2_txt_val_path: "/Data2/ZiHanCao/datasets/pansharpening/gf/reduced_examples/t5_feature_gf2_reduced.safetensors"
+  # gf2_txt_full_path: "/Data2/ZiHanCao/datasets/pansharpening/gf/full_examples/t5_feature_gf2_full.safetensors"
+
+  qb_train_path: "/Data2/ZiHanCao/datasets/pansharpening/qb/training_qb/train_qb.h5"
+  qb_val_path: "/Data2/ZiHanCao/datasets/pansharpening/qb/reduced_examples/test_qb_multiExm1.h5"
+  qb_full_path: "/Data2/ZiHanCao/datasets/pansharpening/pansharpening_test/test_qb_OrigScale_multiExm1.h5"
+  qb_txt_train_path: "/Data2/ZiHanCao/datasets/pansharpening/qb/training_qb/t5_feature_qb_train.safetensors"
+  qb_txt_val_path: "/Data2/ZiHanCao/datasets/pansharpening/qb/reduced_examples/t5_feature_qb_reduced.safetensors"
+  qb_txt_full_path: "/Data2/ZiHanCao/datasets/pansharpening/qb/full_examples/t5_feature_qb_full.safetensors"
+
+#  harvard_x4_train_path: <your_path>/train_data/
+#  harvard_x4_val_path: <your_path>/val_data/
+#
+#  cave_x8_train_path: <your_path>/train_data/
+#  cave_x8_val_path: <your_path>/val_data/
+#
+#  harvard_x8_train_path: <your_path>/train_data/
+#  harvard_x8_val_path: <your_path>/val_data/
+  
+network_configs:
+  FeINFN_FeINFNet:
+    hsi_dim: 5 #9 #128 #31 #102
+    msi_dim: 4 #8 #3 #1
+    NIR_dim: 6 #10 #130 #33 #104
+    feat_dim: 128 
+    guide_dim: 128 
+    spa_edsr_num: 4 
+    spe_edsr_num: 4
+    mlp_dim: [256, 128] 
+    d_model: 2
+    scale: 4
+    patch_merge: no
+
+loss_cfg:
+  l1ssim:
+    weighted_r: [1.0, 0.1]
+    implem_by: torch
+    window_size: 5
+    grad_norm: no
+
+metric_name_for_save:
+  sharpening: PSNR  # [Pansharpening: SAM, HMIF: PSNR]
+  
+  check_order:
+    fusion: down
+    sharpening: up
+
+logger_config:
+  base_path: ./log_file/
+  name: FeINFN
+  file_mode: w
