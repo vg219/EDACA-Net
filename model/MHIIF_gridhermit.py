@@ -344,7 +344,7 @@ class MHIIF_gridhermit(BaseModel):
     
     def sharpening_train_step(self,lms, lr_hsi, pan, gt, criterion):
         # ms = self._construct_ms(lms)
-        sr = self._forward_implem_(pan,lms,lr_hsi)
+        sr = self._forward_implem(pan,lms,lr_hsi)
         loss = criterion(sr, gt)
         return sr.clip(0, 1), loss
     
@@ -384,7 +384,7 @@ class MHIIF_gridhermit(BaseModel):
             )
             pred = _patch_merge_model.forward_chop(lms,lr_hsi,pan)[0]
         else:
-            pred = self._forward_implem_(pan,lms,lr_hsi)
+            pred = self._forward_implem(pan,lms,lr_hsi)
             # pred = self._forward_implem(ms, pan)
 
 
@@ -395,7 +395,7 @@ class MHIIF_gridhermit(BaseModel):
     #     self.criterion = criterion
 
     def patch_merge_step(self,lms, lr_hsi, pan, *args, **kwargs):
-        return self._forward_implem_(pan,lms,lr_hsi)
+        return self._forward_implem(pan,lms,lr_hsi)
         # return self._forward_implem(ms, pan)
 
     def grid_sample_hermite(self, feat, coord_, align_corners=False):
