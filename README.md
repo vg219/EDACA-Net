@@ -4,7 +4,7 @@ Effecient Multi-source Image Fusion Framework
 </p> -->
 
 # Effecient Multi-source Image Fusion Framework
-<div align="center">
+<!-- <div align="center">
 <p style="text-align: center">
      <a href="https://scholar.google.com/citations?user=pv61p_EAAAAJ&hl=en", style="font-size: 18px;">Zihan Cao</a>
      &nbsp
@@ -14,7 +14,7 @@ Effecient Multi-source Image Fusion Framework
      <br>
      <a style="font-size: 16px;"> University of Electronic Science Technology of China </a>
 </p>
-</div>
+</div> -->
 
 
 This a repository that allow you to efficiently train your network on multi-source image fusion task, including 
@@ -29,12 +29,12 @@ This a repository that allow you to efficiently train your network on multi-sour
 This framework is tested on Python 3.9.x / 3.12 and Pytorch 2.3.0 with CUDA 11.8.
 
 
-# NEWS✨
+<!-- # NEWS✨
 2024.07.07: We release codes on some downstream tasks: a) detection task; b) segmentation task. (see `downstreams/` dir for more details.)
 
 2024.06.27: We release VIS-IR and medical image fusion training scripts. 
 
-2024.04.06: Release the some pansharpening and hyperspectral and multispectral image fusion methods. You can found in `model/`.
+2024.04.06: Release the some pansharpening and hyperspectral and multispectral image fusion methods. You can found in `model/`. -->
 
 
 # Quick Start🎈
@@ -145,7 +145,7 @@ If you find it is troublesome to open an matlab to test, we prepare a python scr
 python py_run_matlab_VIS_IR_test.py -f <your/fused/path> -m <your_method_name> -d <dataset_name>
 ```
 
-# Downstream tasks🧨
+<!-- # Downstream tasks🧨
 In VIS-IR fusion task, it's often two choices to test an fusion model with some downstreams tasks, for example: a. *detection*, *segmentation* and *depth estimation*.
 
 In this repo, we introduce two SOTA downstream models to test the fusion models: for detection, we choose YOLOv5 and YOLOv10; for segmentation, we choose MaskFormer and Mask2Former.
@@ -205,15 +205,15 @@ We use pretrained Deption-Anything v2 to estimate the fused images. A clear esti
         </div>
     </div>
 </body>
-</html>
+</html> -->
 
 # Model Cards
 
-You can find our detailed descriptions of the proposed fusion models at `readmes/`. 
+<!-- You can find our detailed descriptions of the proposed fusion models at `readmes/`. 
 
 | Models   | Tasks                | Guidance   |
 | :------: | :------------------: | :--------: |
-| [LE-Mamba (ACM MM 24)](https://arxiv.org/abs/2404.09293) | Pansharpening; HMIF. | [ReadMe](readmes/le-mamba.md) |
+| [LE-Mamba (ACM MM 24)](https://arxiv.org/abs/2404.09293) | Pansharpening; HMIF. | [ReadMe](readmes/le-mamba.md) | -->
 
 
 # About Dataset
@@ -232,13 +232,6 @@ We are planning to release some of them.
 
 If you find our works useful, please conside citing the following papers:
 ```
-@article{cao2024novel,
-  title={A novel state space model with local enhancement and state sharing for image fusion},
-  author={Cao, Zihan and Wu, Xiao and Deng, Liang-Jian and Zhong, Yu},
-  journal={arXiv preprint arXiv:2404.09293},
-  year={2024}
-}
-
 @article{liang2024fourier,
   title={Fourier-enhanced Implicit Neural Fusion Network for Multispectral and Hyperspectral Image Fusion},
   author={Liang, Yu-Jie and Cao, Zihan and Deng, Liang-Jian and Wu, Xiao},
@@ -248,27 +241,6 @@ If you find our works useful, please conside citing the following papers:
 
 And some related works about image fusion may attract you:
 ```
-@article{cao2024neural,
-  title={Neural Shr$\backslash$" odinger Bridge Matching for Pansharpening},
-  author={Cao, Zihan and Wu, Xiao and Deng, Liang-Jian},
-  journal={arXiv preprint arXiv:2404.11416},
-  year={2024}
-}
 
-@article{cao2024diffusion,
-  title={Diffusion model with disentangled modulations for sharpening multispectral and hyperspectral images},
-  author={Cao, Zihan and Cao, Shiqi and Deng, Liang-Jian and Wu, Xiao and Hou, Junming and Vivone, Gemine},
-  journal={Information Fusion},
-  volume={104},
-  pages={102158},
-  year={2024},
-  publisher={Elsevier}
-}
 
-@article{zhong2024ssdiff,
-  title={SSDiff: Spatial-spectral Integrated Diffusion Model for Remote Sensing Pansharpening},
-  author={Zhong, Yu and Wu, Xiao and Deng, Liang-Jian and Cao, Zihan},
-  journal={arXiv preprint arXiv:2404.11537},
-  year={2024}
-}
-```
+
