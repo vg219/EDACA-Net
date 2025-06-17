@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 # from edsr import make_edsr_baseline, make_coord
 import sys
-sys.path.insert(0, '/home/YuJieLiang/Efficient-MIF-back-master-6-feat')
+sys.path.insert(0, '/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat')
 from model.module.fe_block import make_edsr_baseline, make_coord, ComplexGaborLayer, PositionalEmbedding, MLP_P, MLP, hightfre, ImplicitDecoder
 
 from model.base_model import BaseModel, register_model, PatchMergeModule
@@ -432,78 +432,10 @@ class MHIIF_J(BaseModel):
 
         return output
 
-    def _forward_implem_flop_analysis(self, HR_MSI, lms, LR_HSI):
-        """用于FLOP分析的简化版本, 不包含autograd.grad操作"""
-        _, _, H, W = HR_MSI.shape
-        coord = make_coord([H, W]).cuda()
-        hr_guide = self.image_encoder(HR_MSI)  # Bx128xHxW
-        feat = self.depth_encoder(LR_HSI)  # Bx128xhxw
 
-        # 简化的query操作，不包含梯度计算
-        b, c, h, w = feat.shape
-        _, _, H, W = hr_guide.shape
-        coord = coord.expand(b, H * W, 2)
-        B, N, _ = coord.shape
-
-        feat_coord = (
-            make_coord((h, w), flatten=False)
-            .to(feat.device)
-            .permute(2, 0, 1)
-            .unsqueeze(0)
-            .expand(b, 2, h, w)
-        )
-        q_guide_hr = F.grid_sample(
-            hr_guide, coord.flip(-1).unsqueeze(1), mode="nearest", align_corners=False
-        )[:, :, 0, :].permute(0, 2, 1)
-
-        rx = 1 / h
-        ry = 1 / w
-
-        preds = []
-        for vx in [-1, 1]:
-            for vy in [-1, 1]:
-                coord_ = coord.clone()
-                coord_[:, :, 0] += (vx) * rx
-                coord_[:, :, 1] += (vy) * ry
-
-                q_feat = F.grid_sample(
-                    feat,
-                    coord_.flip(-1).unsqueeze(1),
-                    mode="nearest",
-                    align_corners=False,
-                )[:, :, 0, :].permute(0, 2, 1)
-                q_coord = F.grid_sample(
-                    feat_coord,
-                    coord_.flip(-1).unsqueeze(1),
-                    mode="nearest",
-                    align_corners=False,
-                )[:, :, 0, :].permute(0, 2, 1)
-
-                rel_coord = coord - q_coord
-                rel_coord[:, :, 0] *= h
-                rel_coord[:, :, 1] *= w
-
-                inp = torch.cat([q_feat, q_guide_hr, rel_coord], dim=-1)
-
-                # 只使用基本的MLP预测，不包含梯度计算
-                pred = self.imnet(inp.view(B * N, -1)).view(B, N, -1)
-                preds.append(pred)
-
-        preds = torch.stack(preds, dim=-1)
-        weight = F.softmax(preds[:, :, -1, :], dim=-1)
-        ret = (
-            (preds[:, :, 0:-1, :] * weight.unsqueeze(-2))
-            .sum(-1, keepdim=True)
-            .squeeze(-1)
-        )
-        ret = ret.permute(0, 2, 1).view(b, -1, H, W)
-
-        output = lms + ret
-        return output
-    
     def sharpening_train_step(self,lms, lr_hsi, pan, gt, criterion):
         # ms = self._construct_ms(lms)
-        sr = self._forward_implem_(pan,lms,lr_hsi)
+        sr = self._forward_implem(pan,lms,lr_hsi)
         loss = criterion(sr, gt)
         return sr.clip(0, 1), loss
     
@@ -543,7 +475,7 @@ class MHIIF_J(BaseModel):
             )
             pred = _patch_merge_model.forward_chop(lms,lr_hsi,pan)[0]
         else:
-            pred = self._forward_implem_(pan,lms,lr_hsi)
+            pred = self._forward_implem(pan,lms,lr_hsi)
             # pred = self._forward_implem(ms, pan)
 
 
@@ -554,7 +486,7 @@ class MHIIF_J(BaseModel):
     #     self.criterion = criterion
 
     def patch_merge_step(self,lms, lr_hsi, pan, *args, **kwargs):
-        return self._forward_implem_(pan,lms,lr_hsi)
+        return self._forward_implem(pan,lms,lr_hsi)
         # return self._forward_implem(ms, pan)
 
 if __name__ == '__main__':
@@ -594,7 +526,7 @@ if __name__ == '__main__':
     
     # output, loss= model.train_step(LR_HSI, lms, HR_MSI,gt,criterion)
     # print(output.shape)
-    model.forward = model._forward_implem_
+    model.forward = model._forward_implem
     # output = model._forward_implem_v3(HR_MSI,lms,LR_HSI)
     # print(output.shape)
     output = model.sharpening_val_step(lms, LR_HSI, HR_MSI, gt)

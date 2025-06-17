@@ -173,13 +173,13 @@ def val(
         else:
             n = analysis._call_n
             
-        # if logger is not None:
-        #     # log validate curves
-        #     if args.log_metrics:
-        #         logger.log_curves(prefixed_dict_key(acc_ave, "val"), ep)
-        #     logger.log_curve(val_loss, "val_loss", ep)
-        #     for k, v in val_loss_dict.items():
-        #         logger.log_curve(v, f'val_{k}', ep)
+        if logger is not None:
+            # log validate curves
+            if args.log_metrics:
+                logger.log_curves(prefixed_dict_key(acc_ave, "val"), ep)
+            logger.log_curve(val_loss, "val_loss", ep)
+            for k, v in val_loss_dict.items():
+                logger.log_curve(v, f'val_{k}', ep)
 
         #     # log validate image(last batch)
         #     if gt.shape[0] > 8:

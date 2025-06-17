@@ -1,5 +1,52 @@
 ## accelerate run
-CUDA_VISIBLE_DEVICES="1" \
+# CUDA_VISIBLE_DEVICES="3" \
+# T_MAX="65536" \
+# NCCL_P2P_LEVEL="NVL" \
+# NCCL_P2P_DISABLE="1" \
+# NCCL_IB_DISABLE="1" \
+# OMP_NUM_THREADS="6" \
+# accelerate launch \
+# --config_file configs/huggingface/accelerate.yaml \
+# --main_process_port 29506 \
+# accelerate_run_main.py \
+# --proj_name MHIIF_J \
+# -m 'MHIIF_J.MHIIF_J' \
+# -c 'MHIIF_config.yaml' \
+# --dataset cave_x4 \
+# --num_worker 0 -e 500 --train_bs 4 --val_bs 1 \
+# --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
+# --val_n_epoch 10 \
+# --checkpoint_every_n 10 \
+# --comment "MHIIF_J on cave_x4 dataset" \
+# --logger_on \
+# --sanity_check \
+# --resume_path "/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat/log_file/MHIIF_J_MHIIF_J/cave_x4/2025-06-13-16-16-00_MHIIF_i1z7oo2b_MHIIF_J on cave_x4 dataset/weights/checkpoints/checkpoint_17" \
+
+## accelerate run
+# CUDA_VISIBLE_DEVICES="5" \
+# T_MAX="65536" \
+# NCCL_P2P_LEVEL="NVL" \
+# NCCL_P2P_DISABLE="1" \
+# NCCL_IB_DISABLE="1" \
+# OMP_NUM_THREADS="6" \
+# accelerate launch \
+# --config_file configs/huggingface/accelerate.yaml \
+# --main_process_port 29506 \
+# accelerate_run_main.py \
+# --proj_name ENACIR \
+# -m 'ENACIR_V2.ENACIR_V2' \
+# -c 'ENACIR_config.yaml' \
+# --dataset cave_x4 \
+# --num_worker 0 -e 2200 --train_bs 4 --val_bs 1 \
+# --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
+# --val_n_epoch 10 \
+# --checkpoint_every_n 10 \
+# --comment "ENACIR_V2 on cave_x4 dataset" \
+# --logger_on \
+# --sanity_check \
+
+
+CUDA_VISIBLE_DEVICES="6" \
 T_MAX="65536" \
 NCCL_P2P_LEVEL="NVL" \
 NCCL_P2P_DISABLE="1" \
@@ -9,20 +56,17 @@ accelerate launch \
 --config_file configs/huggingface/accelerate.yaml \
 --main_process_port 29506 \
 accelerate_run_main.py \
---proj_name MHIIF_gridhermit \
--m 'MHIIF_gridhermit.MHIIF_gridhermit' \
--c 'MHIIF_config.yaml' \
+--proj_name ENACIR \
+-m 'ENACIR.ENACIR' \
+-c 'ENACIR_config.yaml' \
 --dataset cave_x4 \
---num_worker 6 -e 2000 --train_bs 4 --val_bs 1 \
+--num_worker 0 -e 2200 --train_bs 4 --val_bs 1 \
 --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
 --val_n_epoch 10 \
 --checkpoint_every_n 10 \
---comment "MHIIF_gridhermit on cave_x4 dataset" \
+--comment "ENACIR on cave_x4 dataset" \
 --logger_on \
 --sanity_check \
-# --resume_path "/home/YuJieLiang/Efficient-MIF-back-master-6-feat/log_file/MHIIF_J_MHIIF_J/cave_x4/2025-06-02-23-48-18_MHIIF_qpzdnnnb_MHIIF_J on cave_x4 dataset/weights/checkpoints/checkpoint_22" \
-
-
 # CUDA_VISIBLE_DEVICES="0" \
 # T_MAX="65536" \
 # NCCL_P2P_LEVEL="NVL" \
