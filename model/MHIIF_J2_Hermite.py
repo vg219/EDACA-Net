@@ -31,8 +31,8 @@ class MLP(nn.Module):
         return x
 
 
-@register_model("MHIIF_J2")
-class MHIIF_J2(BaseModel):
+@register_model("MHIIF_J2_Hermite")
+class MHIIF_J2_Hermite(BaseModel):
     def __init__(
         self,
         hsi_dim=31,
@@ -88,7 +88,7 @@ class MHIIF_J2(BaseModel):
                 nn.Linear(rbf_hidden_dim + self.feat_dim + self.guide_dim, 
                          (rbf_hidden_dim + self.feat_dim + self.guide_dim) // 2),
                 nn.ReLU(inplace=True),
-                nn.Linear((rbf_hidden_dim + self.feat_dim + self.guide_dim) // 2, hsi_dim +1),
+                nn.Linear((rbf_hidden_dim + self.feat_dim + self.guide_dim) // 2, hsi_dim),
             )
             
             # Hermite损失函数
@@ -133,58 +133,68 @@ class MHIIF_J2(BaseModel):
 
         # 原始MLP预测
         preds = []
-        rbf_preds = []
-            
         for vx in [-1, 1]:
             for vy in [-1, 1]:
                 coord_ = coord.clone()
                 coord_[:, :, 0] += (vx) * rx
                 coord_[:, :, 1] += (vy) * ry
-                
-                # MLP预测（原有逻辑）
-                q_feat = F.grid_sample(feat, coord_.flip(-1).unsqueeze(1), 
-                                    mode="nearest", align_corners=False)[:, :, 0, :].permute(0, 2, 1)
-                q_coord = F.grid_sample(feat_coord, coord_.flip(-1).unsqueeze(1), 
-                                    mode="nearest", align_corners=False)[:, :, 0, :].permute(0, 2, 1)
-                
+
+                q_feat = F.grid_sample(
+                    feat,
+                    coord_.flip(-1).unsqueeze(1),
+                    mode="nearest",
+                    align_corners=False,
+                )[:, :, 0, :].permute(0, 2, 1)  # [B, N, c]
+                q_coord = F.grid_sample(
+                    feat_coord,
+                    coord_.flip(-1).unsqueeze(1),
+                    mode="nearest",
+                    align_corners=False,
+                )[:, :, 0, :].permute(0, 2, 1)  # [B, N, 2]
+
                 rel_coord = coord - q_coord
                 rel_coord[:, :, 0] *= h
                 rel_coord[:, :, 1] *= w
-                
+
                 inp = torch.cat([q_feat, q_guide_hr, rel_coord], dim=-1)
-                pred = self.imnet(inp.view(B * N, -1)).view(B, N, -1)
+                pred = self.imnet(inp.view(B * N, -1)).view(B, N, -1)  # [B, N, hsi_dim+1]
                 preds.append(pred)
-                
-                # RBF预测（新增 - 对应的邻居坐标）
-                if self.use_hermite_rbf:
-                    norm_coord_ = coord_.clone().view(-1, 2)  # 归一化邻居坐标
-                    rbf_feat_ = self.hermite_rbf(norm_coord_).view(B, N, -1)
-                    
-                    # 局部特征融合
-                    local_feat = q_feat  # 使用已计算的局部特征
-                    local_guide = q_guide_hr
-                    combined_feat_ = torch.cat([rbf_feat_, local_feat, local_guide], dim=-1)
-                    rbf_pred = self.rbf_fusion(combined_feat_)
-                    rbf_preds.append(rbf_pred)
-        
-        # MLP聚合
+
         preds = torch.stack(preds, dim=-1)  # [B, N, hsi_dim+1, 4]
-        weight_preds = F.softmax(preds[:, :, -1, :], dim=-1)
-        mlp_output = ((preds[:, :, 0:-1, :] * weight_preds.unsqueeze(-2)).sum(-1, keepdim=True).squeeze(-1))
+        weight = F.softmax(preds[:, :, -1, :], dim=-1)
+        mlp_output = ((preds[:, :, 0:-1, :] * weight.unsqueeze(-2))
+            .sum(-1, keepdim=True)
+            .squeeze(-1)
+        )  # [B, N, hsi_dim]
         
-        # RBF聚合（如果启用）
+        # Hermite RBF预测
         if self.use_hermite_rbf:
-            rbf_preds = torch.stack(rbf_preds, dim=-1)  # [B, N, hsi_dim, 4]
-            weight_rbf = F.softmax(rbf_preds[:, :, -1, :], dim=-1)
-            # 使用相同的权重或独立权重
-            rbf_output = (rbf_preds[:, :, 0:-1, :] * weight_rbf.unsqueeze(-2)).sum(-1)
+            # 归一化坐标到[-1,1]
+            norm_coord = coord.clone()  # [B, N, 2]
+            norm_coord = norm_coord.view(-1, 2)  # [B*N, 2]
             
-            # 最终融合
+            # Hermite RBF推理
+            rbf_feat = self.hermite_rbf(norm_coord)  # [B*N, rbf_hidden_dim]
+            rbf_feat = rbf_feat.view(B, N, -1)  # [B, N, rbf_hidden_dim]
+            
+            # 特征融合：RBF特征 + 图像特征 + 引导特征
+            # 平均池化获取全局特征作为上下文
+            global_feat = F.adaptive_avg_pool2d(feat, 1).view(b, -1, 1).expand(b, -1, N).permute(0, 2, 1)  # [B, N, feat_dim]
+            global_guide = F.adaptive_avg_pool2d(hr_guide, 1).view(b, -1, 1).expand(b, -1, N).permute(0, 2, 1)  # [B, N, guide_dim]
+            
+            # 融合所有特征
+            combined_feat = torch.cat([rbf_feat, global_feat, global_guide], dim=-1)  # [B, N, rbf_hidden_dim + feat_dim + guide_dim]
+            rbf_output = self.rbf_fusion(combined_feat)  # [B, N, hsi_dim]
+            
+            # 加权融合MLP和RBF输出
             final_output = (1 - self.hermite_weight) * mlp_output + self.hermite_weight * rbf_output
         else:
             final_output = mlp_output
         
-        return final_output.permute(0, 2, 1).view(b, -1, H, W)
+        # 重塑输出
+        ret = final_output.permute(0, 2, 1).view(b, -1, H, W)
+        return ret
+
     def query(self, feat, coord, hr_guide):
         """保持原始接口，内部调用带Hermite的版本"""
         if self.use_hermite_rbf:
@@ -328,11 +338,18 @@ class MHIIF_J2(BaseModel):
     def sharpening_train_step(self, lms, lr_hsi, pan, gt, criterion):
         """训练步骤，包含Hermite损失"""
         sr = self._forward_implem_(pan, lms, lr_hsi)
-        if self.use_hermite_rbf:
-            # 计算Hermite损失
-            loss, _ = criterion(sr, gt, self.hermite_rbf)
+        
+        # 基础损失
+        base_loss = criterion(sr, gt)
+        
+        # 如果使用Hermite RBF，添加Hermite损失
+        if self.use_hermite_rbf and hasattr(self, 'hermite_criterion'):
+            hermite_loss, _ = self.hermite_criterion(sr, gt, self.hermite_rbf)
+            total_loss = base_loss + 0.1 * hermite_loss  # 权重可调
+        else:
+            total_loss = base_loss
             
-        return sr.clip(0, 1), loss
+        return sr.clip(0, 1), total_loss
     
     def sharpening_val_step(self, lms, lr_hsi, pan, gt):
         """验证步骤"""
@@ -380,11 +397,11 @@ if __name__ == '__main__':
 
     # 测试原始版本
     print("=== 原始MHIIF_J2 ===")
-    model_original = MHIIF_J2(31, 3, 64, 64, use_hermite_rbf=False).cuda()
+    model_original = MHIIF_J2_Hermite(31, 3, 64, 64, use_hermite_rbf=False).cuda()
 
     # 测试Hermite版本
     print("=== Hermite RBF版本 ===")
-    model_hermite = MHIIF_J2(
+    model_hermite = MHIIF_J2_Hermite(
         31, 3, 64, 64, 
         use_hermite_rbf=True,
         hermite_order=2,
@@ -400,7 +417,7 @@ if __name__ == '__main__':
     lms = torch.randn([B, C, H, W]).cuda()
     LR_HSI = torch.randn([B, C, H // scale, W // scale]).cuda()
     gt = torch.randn([1, 31, H, W]).cuda()
-    # criterion = model_hermite.hermite_criterion()
+    criterion = torch.nn.L1Loss()
 
     # 测试原始版本
     print("原始版本参数量:", sum(p.numel() for p in model_original.parameters()))
@@ -414,11 +431,11 @@ if __name__ == '__main__':
     print("Hermite版本输出形状:", output_hermite.shape)
 
     # 训练步骤测试
-    # _, loss_original = model_original.sharpening_train_step(lms, LR_HSI, HR_MSI, gt)
-    # _, loss_hermite = model_hermite.sharpening_train_step(lms, LR_HSI, HR_MSI, gt, criterion)
+    _, loss_original = model_original.sharpening_train_step(lms, LR_HSI, HR_MSI, gt, criterion)
+    _, loss_hermite = model_hermite.sharpening_train_step(lms, LR_HSI, HR_MSI, gt, criterion)
     
-    # # print(f"原始版本损失: {loss_original.item():.6f}")
-    # print(f"Hermite版本损失: {loss_hermite.item():.6f}")
+    print(f"原始版本损失: {loss_original.item():.6f}")
+    print(f"Hermite版本损失: {loss_hermite.item():.6f}")
 
     # FLOP分析
     print("\n=== FLOP分析 ===")

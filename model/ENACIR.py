@@ -296,7 +296,17 @@ class ENACIR(BaseModel):
 
         return sr.clip(0, 1), loss
     
-    def sharpening_val_step(self,lms, lr_hsi, pan, gt):  
+    def sharpening_val_step(self,
+                            lms: torch.Tensor,
+                            lr_hsi: torch.Tensor,
+                            pan: torch.Tensor,
+                            txt: "torch.Tensor | None"=None,
+                            patch_merge: "callable | bool | None"=True,
+                            *,
+                            inference_wo_txt: bool=False,
+                            **_kwargs):  
+        if patch_merge is None:
+            patch_merge = self.patch_merge
         if self.patch_merge:
             # logger.debug(f"using patch merge module")
             _patch_merge_model = PatchMergeModule(
@@ -340,16 +350,16 @@ if __name__ == '__main__':
 
     torch.cuda.set_device('cuda:6')
 
-    model = ENACIR(31 ,3 ,128, 128).cuda()
+    model = ENACIR(102 ,1 ,128, 128).cuda()
 
-    B, C, H, W = 1, 31, 64, 64
+    B, C, H, W = 1, 102, 64, 64
     scale = 4
 
-    HR_MSI = torch.randn([B, 3, H, W]).cuda()
+    HR_MSI = torch.randn([B, 1, H, W]).cuda()
     lms = torch.randn([B, C, H, W]).cuda()
     LR_HSI = torch.randn([B, C, H // scale, W // scale]).cuda()
     criterion = torch.nn.L1Loss()
-    gt = torch.randn([1, 31, H, W]).cuda()
+    gt = torch.randn([1, 102, H, W]).cuda()
     
     # output, loss= model.sharpening_train_step(lms, LR_HSI, HR_MSI,gt,criterion)
     # print(output.shape)
@@ -383,3 +393,5 @@ if __name__ == '__main__':
     ####MHIIF 0.67336M               | 2.407678G  
     # #####   0.677328M              | 2.423931G  
     # #####   0.722031M              | 1.811825G
+#######2.693M                 | 7.584G  
+########2.799M                 | 7.745G  

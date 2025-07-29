@@ -513,7 +513,7 @@ if __name__ == '__main__':
 
     torch.cuda.set_device('cuda:1')
 
-    model = MHIIF_J(31 ,3 ,64, 64).cuda()
+    model = MHIIF_J(31 ,3 ,128, 128).cuda()
 
     B, C, H, W = 1, 31, 64, 64
     scale = 4

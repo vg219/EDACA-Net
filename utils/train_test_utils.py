@@ -292,12 +292,12 @@ def get_eval_dataset(args: NameSpace,
                 "houston": "path.houston_txt_val_path",
             }
         
-            txt_file_path = dataset_txt_paths.get(args.dataset, None)
-            txt_file = default_none_getattr(args, txt_file_path)
+            # txt_file_path = dataset_txt_paths.get(args.dataset, None)
+            # txt_file = default_none_getattr(args, txt_file_path)
 
             val_ds = HISRDatasets(
                 d_val, 
-                txt_file=txt_file,
+                # txt_file=txt_file,
                 dataset_fn=dataset_fn,
                 dataset_name=args.dataset,
             )

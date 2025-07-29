@@ -222,9 +222,9 @@ def main(args):
     #     logger.warning('use CPU for inference, may cause error')
         
     dataset_type = args.dataset
-    assert dataset_type in ['wv3', 'gf2', 'qb', 'cave', 'harvard', 'cave_x8', 'harvard_x8', 'gf5',
+    assert dataset_type in ['wv3', 'gf2', 'qb', 'cave_x4', 'harvard_x4', 'cave_x8', 'harvard_x8', 'gf5',
                             'chikusei', 'pavia', 'botswana']
-    if_hisi = dataset_type in ["cave", "cave_x8", "harvard", "harvard_x8", "gf5"]
+    if_hisi = dataset_type in ["cave_x4", "cave_x8", "harvard_x4", "harvard_x8", "gf5"]
     
     # configs
     save_format = args.save_format

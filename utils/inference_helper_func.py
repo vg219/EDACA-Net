@@ -249,46 +249,49 @@ def ref_for_loop(model: "BaseModel",
 def find_data_path(dataset_type, full_res):
     if dataset_type == "wv3":
         if not full_res:
-            path = "/volsparse1/dataset/PanCollection/test_data/test_wv3_multiExm1.h5"
+            path = "/data2/users/yujieliang/dataset/PanCollection/test_data/test_wv3_multiExm1.h5"
         else:
             # path = '/home/ZiHanCao/datasets/pansharpening/wv3/full_examples/test_wv3_OrigScale_multiExm1.h5'
-            path = "/Data2/ZiHanCao/datasets/pansharpening/pansharpening_test/test_wv3_OrigScale_multiExm1.h5"
-    elif dataset_type == "cave":
-        path = "/Data2/ZiHanCao/datasets/HISI/new_cave/test_cave(with_up)x4.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/pansharpening_test/test_wv3_OrigScale_multiExm1.h5"
+    elif dataset_type == "cave_x4":
+        path = "/data2/users/yujieliang/dataset/HISI/new_cave/test_cave(with_up)x4.h5"
     elif dataset_type == "cave_x8":
-        path = "/volsparse1/dataset/HISR/cave_x8/test_cave(with_up)x8_rgb.h5"
-    elif dataset_type == "harvard":
-        # path = "/Data2/ZiHanCao/datasets/HISI/new_harvard/test_harvard(with_up)x4_rgb.h5"
-        path = "/Data2/ShangqiDeng/data/HSI/harvard_x4/test_harvard(with_up)x4_rgb200.h5"
+        path = "/data2/users/yujieliang/dataset/HISI/new_cave/x8/test_cave(with_up)x8_rgb.h5"
+    elif dataset_type == "harvard_x4":
+        path = "/data2/users/yujieliang/dataset/HISI/new_harvard/test_harvard(with_up)x4_rgb.h5"
     elif dataset_type == "harvard_x8":
-        path = "/volsparse1/dataset/HISR/harvard_x8/test_harvard(with_up)x8_rgb.h5"
+        path = "/data2/users/yujieliang/dataset/HISI/new_harvard/x8/test_harvard(with_up)x8_rgb.h5"
+    elif dataset_type == "pavia":
+        path = "/data2/users/yujieliang/dataset/HISI/data_Pavia/Test_Pavia.h5"
+    elif dataset_type == "chikusei":
+        path = "/data2/users/yujieliang/dataset/HISI/Chikusei_x4/test_Chikusei.h5"
     elif dataset_type == "gf5":
         if not full_res:
-            path = "/Data2/ZiHanCao/datasets/pansharpening/GF5-GF1/tap23/test_GF5_GF1_23tap_new.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/GF5-GF1/tap23/test_GF5_GF1_23tap_new.h5"
         else:
-            path = "/Data2/ZiHanCao/datasets/pansharpening/GF5-GF1/tap23/test_GF5_GF1_OrigScale.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/GF5-GF1/tap23/test_GF5_GF1_OrigScale.h5"
     elif dataset_type == "gf":
         if not full_res:
-            path = "/Data2/ZiHanCao/datasets/pansharpening/gf/reduced_examples/test_gf2_multiExm1.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/gf/reduced_examples/test_gf2_multiExm1.h5"
         else:
             # path = '/home/ZiHanCao/datasets/pansharpening/gf/full_examples/test_gf2_OrigScale_multiExm1.h5'
-            path = "/Data2/ZiHanCao/datasets/pansharpening/pansharpening_test/test_gf2_OrigScale_multiExm1.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/pansharpening_test/test_gf2_OrigScale_multiExm1.h5"
     elif dataset_type == "qb":
         if not full_res:
-            path = "/Data2/ZiHanCao/datasets/pansharpening/qb/reduced_examples/test_qb_multiExm1.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/qb/reduced_examples/test_qb_multiExm1.h5"
         else:
             # path = '/home/ZiHanCao/datasets/pansharpening/qb/full_examples/test_qb_OrigScale_multiExm1.h5'
-            path = "/Data2/ZiHanCao/datasets/pansharpening/pansharpening_test/test_qb_OrigScale_multiExm1.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/pansharpening_test/test_qb_OrigScale_multiExm1.h5"
     elif dataset_type == "wv2":
         if not full_res:
-            path = "/Data2/ZiHanCao/datasets/pansharpening/wv2/reduced_examples/test_wv2_multiExm1.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/wv2/reduced_examples/test_wv2_multiExm1.h5"
         else:
             # path = '/home/ZiHanCao/datasets/pansharpening/wv2/full_examples/test_wv2_OrigScale_multiExm1.h5'
-            path = "/Data2/ZiHanCao/datasets/pansharpening/pansharpening_test/test_wv2_OrigScale_multiExm1.h5"
+            path = "/data2/users/yujieliang/dataset/pansharpening/pansharpening_test/test_wv2_OrigScale_multiExm1.h5"
     elif dataset_type == "roadscene":
-        path = "/Data2/ZiHanCao/datasets/RoadSceneFusion_1"
+        path = "/data2/users/yujieliang/dataset/RoadSceneFusion_1"
     elif dataset_type == "tno":
-        path = "/Data2/ZiHanCao/datasets/TNO"
+        path = "/data2/users/yujieliang/dataset/TNO"
     else:
         raise NotImplementedError("not exists {} dataset".format(dataset_type))
 

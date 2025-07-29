@@ -37,9 +37,9 @@ def norm_to_0_1(*args, norm_const=2047):
 #%%
 
 
-path = '/volsparse1/czh/exps/fcformer-bk/visualized_img/data_MIMO_SST_harvard_x8_ref.mat'
+path = '/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat/visualized_img/ENACIR_ENACIR/data_ENACIR_ENACIR_pavia_ref.mat'
 full_res = True if 'unref' in path else False
-dataset_type = 'harvard_x8'
+dataset_type = 'pavia'
 ratio = 4 if dataset_type not in ['cave', 'harvard'] else int(dataset_type.split('_')[-1][-1])
 print('===================DATASET========================')
 print(f'Dataset: {dataset_type}')
@@ -47,12 +47,16 @@ print(f'Full Resolution: {full_res}')
 print(f'Ratio: {ratio}')
 print('=================================================')
 const = {'wv3': 2047, 'gf': 1023, 'qb': 1023, 'wv2': 2047,
-         'cave': 1, 'harvard': 1, 'gf5': 1}.get(dataset_type.split('_')[0], 1)
+         'cave': 1, 'harvard': 1, 'gf5': 1, 'pavia': 1, 'chikusei': 1}.get(dataset_type.split('_')[0], 1)
 dataset_path = find_data_path(dataset_type, full_res)
 
 dataset = h5py.File(dataset_path, 'r')
 
 if dataset_type[:4] == "cave" or dataset_type[:7] == "harvard":
+    keys = ["LRHSI", "HSI_up", "RGB", "GT"]
+elif dataset_type == "pavia" or dataset_type == "botswana":
+    keys = ["MS", "PAN", "LMS", "GT"]
+elif dataset_type == "chikusei" or dataset_type == "houston":
     keys = ["LRHSI", "HSI_up", "RGB", "GT"]
 else:
     keys = None
@@ -67,7 +71,14 @@ if path.is_dir():
         if hasattr(dataset, 'ms'):
             ms, lms, pan = dataset["ms"][i:i+1], dataset["lms"][i:i+1], dataset["pan"][i:i+1]
         else:
-            ms, lms, pan = dataset["LRHSI"][i:i+1], dataset["HSI_up"][i:i+1], dataset["RGB"][i:i+1]
+            if dataset_type[:4] == "cave" or dataset_type[:7] == "harvard":
+                ms, lms, pan = dataset["LRHSI"][i:i+1], dataset["HSI_up"][i:i+1], dataset["RGB"][i:i+1]
+            elif dataset_type == "pavia" or dataset_type == "botswana":
+                ms, lms, pan = dataset["MS"][i:i+1], dataset["PAN"][i:i+1], dataset["LMS"][i:i+1]
+            elif dataset_type == "chikusei" or dataset_type == "houston":
+                ms, lms, pan = dataset["LRHSI"][i:i+1], dataset["HSI_up"][i:i+1], dataset["RGB"][i:i+1]
+            else:
+                raise ValueError(f"Unknown dataset type: {dataset_type}")
         sr = loadmat(path)['sr']
         ms, lms, pan, sr = norm_to_0_1(ms, lms, pan, sr, norm_const=const)
         if full_res: 
@@ -91,7 +102,14 @@ else:
         if hasattr(dataset, 'ms'):
             ms, lms, pan = dataset["ms"][i:i+1], dataset["lms"][i:i+1], dataset["pan"][i:i+1]
         else:
-            ms, lms, pan = dataset["LRHSI"][i:i+1], dataset["HSI_up"][i:i+1], dataset["RGB"][i:i+1]
+            if dataset_type[:4] == "cave" or dataset_type[:7] == "harvard":
+                ms, lms, pan = dataset["LRHSI"][i:i+1], dataset["HSI_up"][i:i+1], dataset["RGB"][i:i+1]
+            elif dataset_type == "pavia" or dataset_type == "botswana":
+                ms, lms, pan = dataset["MS"][i:i+1], dataset["PAN"][i:i+1], dataset["LMS"][i:i+1]
+            elif dataset_type == "chikusei" or dataset_type == "houston":
+                ms, lms, pan = dataset["LRHSI"][i:i+1], dataset["HSI_up"][i:i+1], dataset["RGB"][i:i+1]
+            else:
+                raise ValueError(f"Unknown dataset type: {dataset_type}")
         sr = files[i:i+1]
         ms, lms, pan, sr = norm_to_0_1(ms, lms, pan, sr, norm_const=const)
         if full_res: 
@@ -119,3 +137,5 @@ print(table)
 
     
 
+
+# %%

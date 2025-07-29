@@ -2077,24 +2077,114 @@ class ARLoss(torch.nn.Module):
         return loss, {"loss": loss, "correct_tokens": correct_tokens.mean()}
 
 ########HermiteLoss#########
+from model.hermite_rbf import HermiteRBF
+from typing import Tuple, Optional
 class HermiteLoss(nn.Module):
-    def __init__(self, alpha=0.3):
+    """
+    专门为Hermite RBF设计的损失函数
+    包含重建损失、梯度一致性损失和平滑性损失
+    """
+    
+    def __init__(self, 
+                 lambda_grad: float = 0.1,
+                 lambda_smooth: float = 0.01,
+                 lambda_sparsity: float = 0.001):
         super().__init__()
-        self.alpha = alpha
-        self.value_loss = nn.L1Loss()
-        self.grad_loss = nn.CosineSimilarity(dim=1)
+        self.lambda_grad = lambda_grad
+        self.lambda_smooth = lambda_smooth
+        self.lambda_sparsity = lambda_sparsity
+        self.l1_loss = nn.L1Loss()
+        self.mse_loss = nn.MSELoss()
         
-    def forward(self, pred, target, grad_pred, grad_target):
-        # 值损失
-        l1 = self.value_loss(pred, target)
+    def forward(self, 
+                pred: torch.Tensor, 
+                target: torch.Tensor, 
+                model: Optional[HermiteRBF] = None) -> Tuple[torch.Tensor, dict]:
+        """
+        计算总损失
+        Args:
+            pred: [B, C, H, W] 预测结果
+            target: [B, C, H, W] 目标图像
+            model: HermiteRBF模型（用于计算稀疏性损失）
+        Returns:
+            total_loss: 总损失
+            loss_dict: 各项损失的字典
+        """
+        loss_dict = {}
         
-        # 梯度方向一致性损失
-        grad_sim = 1 - self.grad_loss(
-            grad_pred.reshape(-1,2),
-            grad_target.reshape(-1,2)
-        ).mean()
+        # 1. 基础重建损失
+        recon_loss = self.l1_loss(pred, target)
+        loss_dict['recon'] = recon_loss
         
-        return l1 + self.alpha * grad_sim
+        # 2. 梯度一致性损失
+        grad_loss = self._gradient_consistency_loss(pred, target)
+        loss_dict['grad'] = grad_loss
+        
+        # 3. 平滑性损失
+        smooth_loss = self._smoothness_loss(pred)
+        loss_dict['smooth'] = smooth_loss
+        
+        # 4. 稀疏性损失（鼓励使用较少的核心）
+        sparsity_loss = 0.0
+        if model is not None:
+            sparsity_loss = self._sparsity_loss(model)
+            loss_dict['sparsity'] = sparsity_loss
+        
+        # 总损失
+        total_loss = (recon_loss + 
+                     self.lambda_grad * grad_loss + 
+                     self.lambda_smooth * smooth_loss +
+                     self.lambda_sparsity * sparsity_loss)
+        
+        loss_dict['total'] = total_loss
+        
+        return total_loss, loss_dict
+    
+    def _gradient_consistency_loss(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """计算梯度一致性损失"""
+        # Sobel算子
+        sobel_x = torch.tensor([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], 
+                              dtype=pred.dtype, device=pred.device).view(1, 1, 3, 3)
+        sobel_y = torch.tensor([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], 
+                              dtype=pred.dtype, device=pred.device).view(1, 1, 3, 3)
+        
+        # 计算梯度
+        pred_grad_x = F.conv2d(pred.view(-1, 1, pred.shape[-2], pred.shape[-1]), 
+                              sobel_x, padding=1).view_as(pred)
+        pred_grad_y = F.conv2d(pred.view(-1, 1, pred.shape[-2], pred.shape[-1]), 
+                              sobel_y, padding=1).view_as(pred)
+        
+        target_grad_x = F.conv2d(target.view(-1, 1, target.shape[-2], target.shape[-1]), 
+                                sobel_x, padding=1).view_as(target)
+        target_grad_y = F.conv2d(target.view(-1, 1, target.shape[-2], target.shape[-1]), 
+                                sobel_y, padding=1).view_as(target)
+        
+        # L1损失
+        grad_loss = (self.l1_loss(pred_grad_x, target_grad_x) + 
+                    self.l1_loss(pred_grad_y, target_grad_y))
+        
+        return grad_loss
+    
+    def _smoothness_loss(self, pred: torch.Tensor) -> torch.Tensor:
+        """计算平滑性损失（总变分损失）"""
+        # 计算相邻像素差异
+        tv_h = torch.mean(torch.abs(pred[:, :, 1:, :] - pred[:, :, :-1, :]))
+        tv_w = torch.mean(torch.abs(pred[:, :, :, 1:] - pred[:, :, :, :-1]))
+        
+        return tv_h + tv_w
+    
+    def _sparsity_loss(self, model: HermiteRBF) -> torch.Tensor:
+        """计算稀疏性损失"""
+        # L1正则化鼓励权重稀疏
+        l1_reg = torch.sum(torch.abs(model.hermite_weights))
+        
+        # 核心重要性的熵损失（鼓励少数核心占主导）
+        importance = model.get_kernel_importance()
+        importance_prob = F.softmax(importance, dim=0)
+        entropy_loss = -torch.sum(importance_prob * torch.log(importance_prob + 1e-8))
+        
+        return l1_reg + 0.1 * entropy_loss
+
 #======================================================= loss function getter =======================================================
 
 def get_emma_fusion_loss(fusion_model: nn.Module, 

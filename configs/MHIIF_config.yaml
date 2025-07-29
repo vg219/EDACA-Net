@@ -104,8 +104,8 @@ network_configs:
   MHIIF_J_MHIIF_J:
     hsi_dim: 31
     msi_dim: 3
-    feat_dim: 64
-    guide_dim: 64 
+    feat_dim: 128
+    guide_dim: 128 
     spa_edsr_num: 3 
     spe_edsr_num: 3
     mlp_dim: [256, 128] 
@@ -123,6 +123,12 @@ network_configs:
     mlp_dim: [256, 128] 
     scale: 4
     patch_merge: yes
+      # Hermite RBF 参数
+    use_hermite_rbf: true     # 是否启用Hermite RBF
+    hermite_order: 2          # Hermite阶数 (0-2)
+    n_kernel: 256             # RBF核心数量
+    rbf_hidden_dim: 64        # RBF隐藏层维度
+    hermite_weight: 1       # Hermite RBF输出权重 (0-1)
 
 
   MHIIF_gridhermit_MHIIF_gridhermit:
@@ -151,6 +157,38 @@ network_configs:
     scale: 4
     patch_merge: yes
 
+
+  hermite_rbf_hermite_rbf:
+  ##################### Pansharpening #####################
+      ## CAVE
+        # 基础参数
+    hsi_channels: 31          # 高光谱通道数
+    msi_channels: 3           # 多光谱通道数  
+    scale_factor: 4           # 上采样倍数
+    
+    # Hermite RBF 参数
+    hermite_order: 2          # Hermite阶数 (0: 仅函数值, 1: +一阶导数, 2: +二阶导数)
+    n_kernel: 512             # RBF核心数量
+    adaptive_sigma: true      # 是否使用自适应sigma
+    rbf_type: "hermite_gauss" # RBF类型
+    
+    # 坐标编码参数（可选）
+    use_hash_encoding: false  # 是否使用位置编码（简化版本）
+    hash_levels: 16           # 编码层级数
+    hash_features: 2          # 每层特征数
+    
+    # 网络结构参数
+    # hidden_dim: 128           # 隐藏层维度
+    # n_layers: 4               # 网络层数
+    # hsi_dim: 31
+    # msi_dim: 3
+    # feat_dim: 64
+    # guide_dim: 64
+    # spa_edsr_num: 3
+    # spe_edsr_num: 3
+    # mlp_dim: [256,128]
+    # scale: 4
+    patch_merge: yes
 
   ########################## MEF ##########################
     # img_channel: 1
@@ -190,6 +228,11 @@ loss_cfg:
     implem_by: torch
     window_size: 5
     grad_norm: no
+  hermite:
+    lambda_grad: 0.05
+    lambda_smooth: 0.01
+    lambda_sparsity: 0.001
+
 
 metric_name_for_save:
   sharpening: PSNR  # [Pansharpening: SAM, HMIF: PSNR]

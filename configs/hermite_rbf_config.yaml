@@ -1,0 +1,114 @@
+# Hermite RBF Enhanced MHIIF Configuration
+# 使用Hermite径向基函数改进的MHIIF网络配置
+
+model:
+  type: "MHIIF_HermiteRBF"
+  
+  # 基础参数
+  hsi_channels: 31          # 高光谱通道数
+  msi_channels: 3           # 多光谱通道数  
+  scale_factor: 4           # 上采样倍数
+  
+  # Hermite RBF 参数
+  hermite_order: 2          # Hermite阶数 (0: 仅函数值, 1: +一阶导数, 2: +二阶导数)
+  n_kernel: 512             # RBF核心数量
+  adaptive_sigma: true      # 是否使用自适应sigma
+  rbf_type: "hermite_gauss" # RBF类型
+  
+  # 坐标编码参数（可选）
+  use_hash_encoding: false  # 是否使用位置编码（简化版本）
+  hash_levels: 16           # 编码层级数
+  hash_features: 2          # 每层特征数
+  
+  # 网络结构参数
+  hidden_dim: 128           # 隐藏层维度
+  n_layers: 4               # 网络层数
+
+training:
+  # 优化器参数
+  optimizer: "AdamW"
+  learning_rate: 2.0e-4
+  weight_decay: 1.0e-4
+  
+  # 学习率调度
+  scheduler: "CosineAnnealingLR"
+  T_max: 500
+  eta_min: 1.0e-6
+  
+  # 训练参数
+  batch_size: 4
+  num_epochs: 500
+  gradient_clip: 1.0
+  
+  # 渐进式训练
+  progressive_training: true
+  order_switch_epochs: [50, 100]  # 切换Hermite阶数的epoch
+  
+  # 损失函数权重
+  loss_weights:
+    lambda_grad: 0.1        # 梯度一致性损失权重
+    lambda_smooth: 0.01     # 平滑性损失权重
+    lambda_sparsity: 0.001  # 稀疏性损失权重
+  
+  # 核心修剪
+  kernel_pruning:
+    enabled: true
+    threshold: 1.0e-6       # 重要性阈值
+    prune_epochs: [100, 200, 300]  # 修剪epoch
+
+dataset:
+  name: "CAVE"
+  data_path: "/path/to/cave/dataset"
+  
+  # 数据增强
+  augmentation:
+    horizontal_flip: true
+    vertical_flip: true
+    rotation: false
+    
+  # 数据加载
+  num_workers: 4
+  pin_memory: true
+
+evaluation:
+  # 评估指标
+  metrics: ["PSNR", "SSIM", "SAM", "ERGAS", "CC"]
+  
+  # 评估频率
+  eval_frequency: 10  # 每10个epoch评估一次
+  
+  # 保存设置
+  save_best: true
+  save_frequency: 50  # 每50个epoch保存一次
+
+logging:
+  # 日志设置
+  log_level: "INFO"
+  log_frequency: 1    # 每个epoch记录一次
+  
+  # 可视化
+  visualize_rbf: true      # 是否可视化RBF核心
+  visualize_frequency: 50  # 可视化频率
+  
+  # 实验跟踪
+  use_wandb: false
+  use_tensorboard: true
+
+# 实验配置
+experiment:
+  name: "MHIIF_HermiteRBF_CAVE_x4"
+  description: "使用Hermite RBF改进的MHIIF网络，用于CAVE数据集4倍超分辨率"
+  tags: ["hermite_rbf", "mhiif", "hyperspectral", "super_resolution"]
+  
+  # 输出路径
+  output_dir: "./experiments/hermite_rbf"
+  checkpoint_dir: "./checkpoints/hermite_rbf"
+  
+  # 随机种子
+  seed: 42
+
+# 设备配置
+device:
+  type: "cuda"  # cuda, cpu
+  gpu_ids: [0]  # 使用的GPU ID
+  mixed_precision: true  # 是否使用混合精度训练
