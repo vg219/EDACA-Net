@@ -71,25 +71,27 @@ class MHIIF_J2(BaseModel):
         imnet_in_dim = self.feat_dim + self.guide_dim + 2
         self.imnet = MLP(imnet_in_dim, out_dim=hsi_dim + 1, hidden_list=self.mlp_dim)
         
-        # Hermite RBF网络
+        # Hermite RBF网络 - MLP增强版本
         if self.use_hermite_rbf:
-            self.hermite_rbf = HermiteRBF(
-                cmin=-1.0, cmax=1.0,
-                in_dim=2,  # 2D坐标
-                out_dim=rbf_hidden_dim,
-                n_kernel=n_kernel,
-                hermite_order=hermite_order,
-                adaptive_sigma=True,
-                use_bias=True
+            # RBF核心：智能初始化策略
+            self.rbf_centers = nn.Parameter(self._init_rbf_centers(n_kernel))  # 均匀分布的核心位置
+            self.rbf_sigmas = nn.Parameter(self._init_rbf_sigmas(n_kernel))    # 自适应的核心带宽
+            
+            # Hermite阶数和权重
+            self.hermite_order = hermite_order
+            hermite_dim = self._get_hermite_dim(2, hermite_order)  # 2D坐标的Hermite维度
+            self.rbf_weights = nn.Parameter(self._init_rbf_weights(n_kernel, hermite_dim, hsi_dim + 1))
+            
+            # MLP作为核函数P_0：处理局部特征和相对坐标
+            # 这个MLP现在被解释为Hermite基函数的0阶项
+            self.hermite_mlp = MLP(
+                in_dim=imnet_in_dim,  # feat + guide + rel_coord
+                out_dim=hsi_dim + 1,
+                hidden_list=self.mlp_dim
             )
             
-            # RBF特征融合网络
-            self.rbf_fusion = nn.Sequential(
-                nn.Linear(rbf_hidden_dim + self.feat_dim + self.guide_dim, 
-                         (rbf_hidden_dim + self.feat_dim + self.guide_dim) // 2),
-                nn.ReLU(inplace=True),
-                nn.Linear((rbf_hidden_dim + self.feat_dim + self.guide_dim) // 2, hsi_dim +1),
-            )
+            # 智能初始化MLP，使其初始行为类似高斯核函数
+            self._init_hermite_mlp_as_gaussian()
             
             # Hermite损失函数
             self.hermite_criterion = HermiteLoss(
@@ -106,9 +108,179 @@ class MHIIF_J2(BaseModel):
             patch_size_list=[16, 16 * self.scale, 16 * self.scale],
         )
 
+    def _get_hermite_dim(self, in_dim: int, order: int) -> int:
+        """计算Hermite基函数的维度"""
+        dim = 1  # 0阶: 函数值
+        if order >= 1:
+            dim += in_dim  # 1阶: 一阶导数
+        if order >= 2:
+            dim += in_dim * (in_dim + 1) // 2  # 2阶: 二阶导数
+        return dim
+
+    def _init_rbf_centers(self, n_kernel):
+        """智能初始化RBF中心：在坐标空间均匀分布"""
+        # 使用网格布局 + 小的随机扰动
+        grid_size = int(math.sqrt(n_kernel))
+        if grid_size * grid_size < n_kernel:
+            grid_size += 1
+            
+        # 在[-1, 1] x [-1, 1]范围内创建网格
+        x = torch.linspace(-1, 1, grid_size)
+        y = torch.linspace(-1, 1, grid_size)
+        xx, yy = torch.meshgrid(x, y, indexing='ij')
+        
+        # 取前n_kernel个点
+        centers = torch.stack([xx.flatten(), yy.flatten()], dim=1)[:n_kernel]
+        
+        # 添加小的随机扰动以避免过度规则化
+        centers += 0.1 * torch.randn_like(centers)
+        
+        return centers
+    
+    def _init_rbf_sigmas(self, n_kernel):
+        """智能初始化RBF带宽：基于中心间距离"""
+        # 估算平均中心间距离
+        avg_distance = 2.0 / math.sqrt(n_kernel)  # 基于网格的估算
+        
+        # sigma设为平均距离的0.5-1.5倍，加入一些变化
+        base_sigma = avg_distance * 0.8
+        sigmas = base_sigma * (0.5 + torch.rand(n_kernel))  # [0.5, 1.5] * base_sigma
+        
+        return sigmas
+    
+    def _init_rbf_weights(self, n_kernel, hermite_dim, out_dim):
+        """使用高斯核函数的模拟值初始化RBF权重"""
+        # 为0阶项(高斯核函数)设置较大的初始权重
+        weights = torch.zeros(n_kernel, hermite_dim, out_dim)
+        
+        # 0阶项：模拟标准高斯核的输出，给予较大的初始值
+        weights[:, 0, :] = 0.5 + 0.1 * torch.randn(n_kernel, out_dim)
+        
+        # 1阶项：梯度项，给予较小的初始值
+        if hermite_dim > 1:
+            weights[:, 1:3, :] = 0.1 * torch.randn(n_kernel, 2, out_dim) if hermite_dim > 2 else 0.1 * torch.randn(n_kernel, hermite_dim-1, out_dim)
+        
+        # 2阶项：二阶导数项，给予最小的初始值
+        if hermite_dim > 3:
+            weights[:, 3:, :] = 0.05 * torch.randn(n_kernel, hermite_dim-3, out_dim)
+        
+        return weights
+    
+    def _init_hermite_mlp_as_gaussian(self):
+        """
+        智能初始化hermite_mlp，使其初始行为接近高斯核函数
+        重点关注相对坐标的最后两个维度（rel_coord部分）
+        """
+        with torch.no_grad():
+            # 对MLP的最后一层进行特殊初始化
+            # 使其对相对坐标(最后2维)敏感，类似高斯核函数
+            
+            layers = list(self.hermite_mlp.layers.children())
+            
+            # 初始化第一层：让网络对相对坐标敏感
+            if len(layers) > 0 and isinstance(layers[0], nn.Linear):
+                first_layer = layers[0]
+                input_dim = first_layer.in_features
+                
+                # 重新初始化权重
+                nn.init.xavier_normal_(first_layer.weight)
+                
+                # 对相对坐标部分(最后2维)给予更大的权重，模拟距离敏感性
+                coord_weights = first_layer.weight[:, -2:]  # 最后2维是rel_coord
+                coord_weights.data *= 2.0  # 增强坐标敏感性
+                
+                # 偏置初始化
+                nn.init.zeros_(first_layer.bias)
+            
+            # 初始化最后一层：输出类似高斯核的响应
+            if len(layers) >= 2:
+                last_layer = None
+                for layer in reversed(layers):
+                    if isinstance(layer, nn.Linear):
+                        last_layer = layer
+                        break
+                
+                if last_layer is not None:
+                    # 权重小初始化，避免过大的初始输出
+                    nn.init.normal_(last_layer.weight, mean=0, std=0.1)
+                    
+                    # 偏置设为正值，类似高斯核的正输出
+                    nn.init.constant_(last_layer.bias, 0.5)
+            
+            # 中间层使用标准初始化
+            for layer in layers:
+                if isinstance(layer, nn.Linear) and layer != layers[0] and layer != last_layer:
+                    nn.init.xavier_normal_(layer.weight)
+                    nn.init.zeros_(layer.bias)
+
+    def compute_hermite_derivatives(self, mlp_output, coord_diff, sigmas):
+        """
+        计算MLP作为P_0核函数的Hermite导数特征
+        
+        Args:
+            mlp_output: [B, N, out_dim] MLP输出作为P_0值
+            coord_diff: [B, N, K, 2] 查询点到RBF中心的坐标差异
+            sigmas: [K] 每个RBF中心的sigma参数
+            
+        Returns:
+            hermite_features: [B, N, K, hermite_dim, out_dim] Hermite导数特征
+        """
+        B, N, out_dim = mlp_output.shape
+        K = coord_diff.shape[2]
+        hermite_dim = self._get_hermite_dim(2, self.hermite_order)  # 修复：传入正确的参数
+        
+        # 初始化Hermite特征张量
+        hermite_features = torch.zeros(B, N, K, hermite_dim, out_dim, 
+                                     device=mlp_output.device, dtype=mlp_output.dtype)
+        
+        # 扩展MLP输出维度以匹配K个RBF中心
+        mlp_expanded = mlp_output.unsqueeze(2).expand(B, N, K, out_dim)  # [B, N, K, out_dim]
+        
+        # 坐标差异分量
+        dx = coord_diff[..., 0]  # [B, N, K]
+        dy = coord_diff[..., 1]  # [B, N, K]
+        sigma_expanded = sigmas.view(1, 1, K)  # [1, 1, K]
+        
+        # 为数值稳定性添加小的扰动
+        epsilon = 1e-6
+        
+        idx = 0
+        for order in range(self.hermite_order + 1):
+            for alpha in range(order + 1):
+                beta = order - alpha
+                
+                # 计算Hermite系数 H_{α,β}(x,y) = (-1)^{α+β} * x^α * y^β / (σ^{α+β})
+                if alpha == 0 and beta == 0:
+                    # 0阶: H_{0,0} = P_0(MLP输出)
+                    hermite_coeff = torch.ones_like(dx)
+                elif alpha == 1 and beta == 0:
+                    # 1阶x导数: H_{1,0} = -x/σ²
+                    hermite_coeff = -dx / (sigma_expanded**2 + epsilon)
+                elif alpha == 0 and beta == 1:
+                    # 1阶y导数: H_{0,1} = -y/σ²
+                    hermite_coeff = -dy / (sigma_expanded**2 + epsilon)
+                elif alpha == 2 and beta == 0:
+                    # 2阶xx导数: H_{2,0} = (x²/σ⁴ - 1/σ²)
+                    hermite_coeff = (dx**2) / (sigma_expanded**4 + epsilon) - 1.0 / (sigma_expanded**2 + epsilon)
+                elif alpha == 1 and beta == 1:
+                    # 2阶xy导数: H_{1,1} = xy/σ⁴
+                    hermite_coeff = (dx * dy) / (sigma_expanded**4 + epsilon)
+                elif alpha == 0 and beta == 2:
+                    # 2阶yy导数: H_{0,2} = (y²/σ⁴ - 1/σ²)
+                    hermite_coeff = (dy**2) / (sigma_expanded**4 + epsilon) - 1.0 / (sigma_expanded**2 + epsilon)
+                else:
+                    # 其他高阶项，设为0或使用递推关系
+                    hermite_coeff = torch.zeros_like(dx)
+                
+                # 应用Hermite系数到MLP输出
+                hermite_features[:, :, :, idx, :] = hermite_coeff.unsqueeze(-1) * mlp_expanded
+                idx += 1
+        
+        return hermite_features
+
     def query_with_hermite(self, feat, coord, hr_guide):
         """
-        结合Hermite RBF的查询函数
+        结合Hermite RBF的查询函数 - MLP作为核函数版本
         """
         # 原始的query逻辑
         b, c, h, w = feat.shape  # lr  7x128x8x8
@@ -131,58 +303,83 @@ class MHIIF_J2(BaseModel):
         rx = 1 / h
         ry = 1 / w
 
-        # 原始MLP预测
-        preds = []
-        rbf_preds = []
-            
-        for vx in [-1, 1]:
-            for vy in [-1, 1]:
-                coord_ = coord.clone()
-                coord_[:, :, 0] += (vx) * rx
-                coord_[:, :, 1] += (vy) * ry
-                
-                # MLP预测（原有逻辑）
-                q_feat = F.grid_sample(feat, coord_.flip(-1).unsqueeze(1), 
-                                    mode="nearest", align_corners=False)[:, :, 0, :].permute(0, 2, 1)
-                q_coord = F.grid_sample(feat_coord, coord_.flip(-1).unsqueeze(1), 
-                                    mode="nearest", align_corners=False)[:, :, 0, :].permute(0, 2, 1)
-                
-                rel_coord = coord - q_coord
-                rel_coord[:, :, 0] *= h
-                rel_coord[:, :, 1] *= w
-                
-                inp = torch.cat([q_feat, q_guide_hr, rel_coord], dim=-1)
-                pred = self.imnet(inp.view(B * N, -1)).view(B, N, -1)
-                preds.append(pred)
-                
-                # RBF预测（新增 - 对应的邻居坐标）
-                if self.use_hermite_rbf:
-                    norm_coord_ = coord_.clone().view(-1, 2)  # 归一化邻居坐标
-                    rbf_feat_ = self.hermite_rbf(norm_coord_).view(B, N, -1)
-                    
-                    # 局部特征融合
-                    local_feat = q_feat  # 使用已计算的局部特征
-                    local_guide = q_guide_hr
-                    combined_feat_ = torch.cat([rbf_feat_, local_feat, local_guide], dim=-1)
-                    rbf_pred = self.rbf_fusion(combined_feat_)
-                    rbf_preds.append(rbf_pred)
-        
-        # MLP聚合
-        preds = torch.stack(preds, dim=-1)  # [B, N, hsi_dim+1, 4]
-        weight_preds = F.softmax(preds[:, :, -1, :], dim=-1)
-        mlp_output = ((preds[:, :, 0:-1, :] * weight_preds.unsqueeze(-2)).sum(-1, keepdim=True).squeeze(-1))
-        
-        # RBF聚合（如果启用）
         if self.use_hermite_rbf:
-            rbf_preds = torch.stack(rbf_preds, dim=-1)  # [B, N, hsi_dim, 4]
-            weight_rbf = F.softmax(rbf_preds[:, :, -1, :], dim=-1)
-            # 使用相同的权重或独立权重
-            rbf_output = (rbf_preds[:, :, 0:-1, :] * weight_rbf.unsqueeze(-2)).sum(-1)
+            # 统一的MLP-RBF预测
+            preds = []
             
-            # 最终融合
-            final_output = (1 - self.hermite_weight) * mlp_output + self.hermite_weight * rbf_output
+            for vx in [-1, 1]:
+                for vy in [-1, 1]:
+                    coord_ = coord.clone()
+                    coord_[:, :, 0] += (vx) * rx
+                    coord_[:, :, 1] += (vy) * ry
+                    
+                    # 获取局部特征
+                    q_feat = F.grid_sample(feat, coord_.flip(-1).unsqueeze(1), 
+                                        mode="nearest", align_corners=False)[:, :, 0, :].permute(0, 2, 1)
+                    q_coord = F.grid_sample(feat_coord, coord_.flip(-1).unsqueeze(1), 
+                                        mode="nearest", align_corners=False)[:, :, 0, :].permute(0, 2, 1)
+                    
+                    rel_coord = coord - q_coord
+                    rel_coord[:, :, 0] *= h
+                    rel_coord[:, :, 1] *= w
+                    
+                    # MLP作为P_0核函数
+                    inp = torch.cat([q_feat, q_guide_hr, rel_coord], dim=-1)
+                    mlp_output = self.hermite_mlp(inp.view(B * N, -1)).view(B, N, -1)  # [B, N, hsi_dim+1]
+                    
+                    # 计算到RBF中心的坐标差异
+                    coord_expanded = coord_.view(B, N, 1, 2)  # [B, N, 1, 2]
+                    centers_expanded = self.rbf_centers.unsqueeze(0).unsqueeze(0)  # [1, 1, K, 2]
+                    coord_diff = coord_expanded - centers_expanded  # [B, N, K, 2]
+                    
+                    # 计算高斯权重
+                    distances = torch.norm(coord_diff, dim=-1)  # [B, N, K]
+                    sigma_expanded = self.rbf_sigmas.unsqueeze(0).unsqueeze(0)  # [1, 1, K]
+                    gaussian_weights = torch.exp(-0.5 * (distances / (sigma_expanded + 1e-8))**2)  # [B, N, K]
+                    
+                    # 计算Hermite导数特征
+                    hermite_features = self.compute_hermite_derivatives(
+                        mlp_output, coord_diff, self.rbf_sigmas
+                    )  # [B, N, K, hermite_dim, out_dim]
+                    
+                    # 应用高斯权重到Hermite特征
+                    weighted_hermite = hermite_features * gaussian_weights.unsqueeze(-1).unsqueeze(-1)  # [B, N, K, hermite_dim, out_dim]
+                    
+                    # 与RBF权重结合: [B, N, K, hermite_dim, out_dim] × [K, hermite_dim, out_dim] -> [B, N, out_dim]
+                    final_pred = torch.einsum('bnkho,kho->bno', weighted_hermite, self.rbf_weights)
+                    
+                    preds.append(final_pred)
+            
+            # 聚合4个邻居的预测
+            preds = torch.stack(preds, dim=-1)  # [B, N, hsi_dim+1, 4]
+            weight = F.softmax(preds[:, :, -1, :], dim=-1)
+            final_output = ((preds[:, :, 0:-1, :] * weight.unsqueeze(-2)).sum(-1, keepdim=True).squeeze(-1))
+            
         else:
-            final_output = mlp_output
+            # 原始MLP预测（保持不变）
+            preds = []
+            for vx in [-1, 1]:
+                for vy in [-1, 1]:
+                    coord_ = coord.clone()
+                    coord_[:, :, 0] += (vx) * rx
+                    coord_[:, :, 1] += (vy) * ry
+
+                    q_feat = F.grid_sample(feat, coord_.flip(-1).unsqueeze(1),
+                                        mode="nearest", align_corners=False)[:, :, 0, :].permute(0, 2, 1)
+                    q_coord = F.grid_sample(feat_coord, coord_.flip(-1).unsqueeze(1),
+                                        mode="nearest", align_corners=False)[:, :, 0, :].permute(0, 2, 1)
+
+                    rel_coord = coord - q_coord
+                    rel_coord[:, :, 0] *= h
+                    rel_coord[:, :, 1] *= w
+
+                    inp = torch.cat([q_feat, q_guide_hr, rel_coord], dim=-1)
+                    pred = self.imnet(inp.view(B * N, -1)).view(B, N, -1)
+                    preds.append(pred)
+
+            preds = torch.stack(preds, dim=-1)  # [B, N, hsi_dim+1, 4]
+            weight = F.softmax(preds[:, :, -1, :], dim=-1)
+            final_output = ((preds[:, :, 0:-1, :] * weight.unsqueeze(-2)).sum(-1, keepdim=True).squeeze(-1))
         
         return final_output.permute(0, 2, 1).view(b, -1, H, W)
     def query(self, feat, coord, hr_guide):
@@ -329,8 +526,23 @@ class MHIIF_J2(BaseModel):
         """训练步骤，包含Hermite损失"""
         sr = self._forward_implem_(pan, lms, lr_hsi)
         if self.use_hermite_rbf:
-            # 计算Hermite损失
-            loss, _ = criterion(sr, gt, self.hermite_rbf)
+            # 可以添加RBF正则化损失
+            # 计算基础损失
+            loss = criterion(sr, gt)
+            
+            # RBF正则化：鼓励核心分布均匀，权重稀疏
+            if hasattr(self, 'rbf_centers'):
+                # 核心分散性损失
+                centers_dist = torch.pdist(self.rbf_centers)
+                diversity_loss = torch.exp(-centers_dist).mean()
+                
+                # 权重稀疏性损失
+                sparsity_loss = torch.norm(self.rbf_weights, p=1)
+                
+                # 添加正则化
+                loss = loss + 0.01 * diversity_loss + 0.001 * sparsity_loss
+        else:
+            loss = criterion(sr, gt)
             
         return sr.clip(0, 1), loss
     
@@ -357,26 +569,86 @@ class MHIIF_J2(BaseModel):
         """获取RBF网络信息"""
         if self.use_hermite_rbf:
             return {
-                'n_kernels': self.hermite_rbf.n_kernel,
-                'hermite_order': self.hermite_rbf.hermite_order,
-                'kernel_importance': self.hermite_rbf.get_kernel_importance(),
-                'rbf_parameters': sum(p.numel() for p in self.hermite_rbf.parameters()),
-                'hermite_weight': self.hermite_weight
+                'n_kernels': self.rbf_centers.shape[0],
+                'hermite_order': self.hermite_order,
+                'rbf_centers_range': (self.rbf_centers.min().item(), self.rbf_centers.max().item()),
+                'rbf_sigmas_range': (self.rbf_sigmas.min().item(), self.rbf_sigmas.max().item()),
+                'rbf_weights_shape': self.rbf_weights.shape,
+                'rbf_parameters': sum(p.numel() for p in [self.rbf_centers, self.rbf_sigmas, self.rbf_weights]) + 
+                                sum(p.numel() for p in self.hermite_mlp.parameters()),
+                'initialization': 'gaussian_informed',  # 新增：标记使用了高斯启发的初始化
+                'mlp_layers': len([m for m in self.hermite_mlp.modules() if isinstance(m, nn.Linear)]),
             }
         else:
             return {'hermite_rbf': 'disabled'}
+    
+    def test_initialization_quality(self, test_samples=1000):
+        """测试初始化质量：验证MLP的初始行为是否类似高斯核"""
+        if not self.use_hermite_rbf:
+            return "RBF disabled"
+            
+        with torch.no_grad():
+            # 生成测试数据
+            device = self.rbf_centers.device
+            B, N = 1, test_samples
+            
+            # 随机特征和指导
+            feat_dim = self.feat_dim + self.guide_dim
+            test_feat = torch.randn(B, N, feat_dim, device=device)
+            
+            # 测试不同距离的相对坐标
+            distances = torch.linspace(0, 2, test_samples, device=device)
+            rel_coords = torch.stack([distances, torch.zeros_like(distances)], dim=-1).unsqueeze(0)  # [1, N, 2]
+            
+            # 组合输入
+            test_input = torch.cat([test_feat, rel_coords], dim=-1)  # [1, N, feat_dim + 2]
+            
+            # MLP输出
+            mlp_out = self.hermite_mlp(test_input.view(-1, test_input.shape[-1]))
+            mlp_out = mlp_out.view(B, N, -1)[:, :, 0]  # 取第一个输出通道
+            
+            # 理想的高斯响应
+            sigma_test = 0.5
+            ideal_gaussian = torch.exp(-distances**2 / (2 * sigma_test**2))
+            
+            # 计算相似度
+            mlp_normalized = (mlp_out[0] - mlp_out[0].min()) / (mlp_out[0].max() - mlp_out[0].min() + 1e-8)
+            correlation = torch.corrcoef(torch.stack([mlp_normalized, ideal_gaussian]))[0, 1]
+            
+            return {
+                'gaussian_correlation': correlation.item(),
+                'mlp_output_range': (mlp_out.min().item(), mlp_out.max().item()),
+                'ideal_range': (ideal_gaussian.min().item(), ideal_gaussian.max().item()),
+                'initialization_quality': 'good' if correlation > 0.3 else 'needs_improvement'
+            }
 
     def prune_rbf_kernels(self, threshold=1e-6):
         """修剪RBF核心"""
         if self.use_hermite_rbf:
-            return self.hermite_rbf.prune_kernels(threshold)
+            with torch.no_grad():
+                # 基于权重范数计算重要性
+                importance = torch.norm(self.rbf_weights, dim=1)
+                keep_mask = importance > threshold
+                
+                if keep_mask.sum() == 0:
+                    return 0
+                
+                old_count = self.rbf_centers.shape[0]
+                
+                # 更新参数
+                self.rbf_centers.data = self.rbf_centers.data[keep_mask]
+                self.rbf_sigmas.data = self.rbf_sigmas.data[keep_mask]
+                self.rbf_weights.data = self.rbf_weights.data[keep_mask]
+                
+                new_count = keep_mask.sum().item()
+                return old_count - new_count
         return 0
 
 
 if __name__ == '__main__':
     from fvcore.nn import FlopCountAnalysis, flop_count_table
 
-    torch.cuda.set_device('cuda:1')
+    torch.cuda.set_device('cuda:2')
 
     # 测试原始版本
     print("=== 原始MHIIF_J2 ===")
