@@ -377,33 +377,21 @@ class MHIIF_(BaseModel):
         loss = criterion(sr, gt)
         return sr.clip(0, 1), loss
     
-    # def sharpening_train_step(self, ms, lms, pan, gt, criterion):
-    #     sr = self._forward_implem(pan, lms, ms)
-    #     # sr = self._forward_implem(ms,pan)
 
-    #     loss = criterion(sr, gt)
-    #     # loss_2 = criterion(sr_g, self.grad_gt(gt-lms))
-    #     # loss = loss_1[0] + 0.1 * loss_2[0]
-        
-    #     # log_vars = {}
-    #     # with torch.no_grad():
-    #     #     metrics = analysis_accu(gt, sr, 4, choices=4)
-    #     #     log_vars.update(metrics)
-
-    #     # return {'loss': loss, 'log_vars': log_vars}
-    #     return sr.clip(0, 1), loss
     
-    def sharpening_val_step(self,lms, lr_hsi, pan, gt):
-
-        # gt, lms, ms, pan = data['gt'].cuda(), data['lms'].cuda(), \
-        #                         data['ms'].cuda(), data['pan'].cuda()
-        # sr1 = self(ms, lms, pan)
-        # with torch.no_grad():
-        #     metrics = analysis_accu(gt[0].permute(1, 2, 0), sr1[0].permute(1, 2, 0), 4)
-        #     metrics.update(metrics)
-        
+    def sharpening_val_step(self,
+                            lms: torch.Tensor,
+                            lr_hsi: torch.Tensor,
+                            pan: torch.Tensor,
+                            txt: "torch.Tensor | None"=None,
+                            patch_merge: "callable | bool | None"=True,
+                            *,
+                            inference_wo_txt: bool=False,
+                            **_kwargs):  
+        if patch_merge is None:
+            patch_merge = self.patch_merge
         if self.patch_merge:
-            logger.debug(f"using patch merge module")
+            # logger.debug(f"using patch merge module")
             _patch_merge_model = PatchMergeModule(
                 self,
                 crop_batch_size=64,
@@ -414,15 +402,9 @@ class MHIIF_(BaseModel):
             pred = _patch_merge_model.forward_chop(lms,lr_hsi,pan)[0]
         else:
             pred = self._forward_implem_(pan,lms,lr_hsi)
-            # pred = self._forward_implem(ms, pan)
-
 
         return pred.clip(0, 1)
     
-    # def set_metrics(self, criterion, rgb_range=1.0):
-    #     self.rgb_range = rgb_range
-    #     self.criterion = criterion
-
     def patch_merge_step(self,lms, lr_hsi, pan, *args, **kwargs):
         return self._forward_implem_(pan,lms,lr_hsi)
         # return self._forward_implem(ms, pan)

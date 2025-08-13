@@ -223,8 +223,8 @@ def main(args):
         
     dataset_type = args.dataset
     assert dataset_type in ['wv3', 'gf2', 'qb', 'cave_x4', 'harvard_x4', 'cave_x8', 'harvard_x8', 'gf5',
-                            'chikusei', 'pavia', 'botswana']
-    if_hisi = dataset_type in ["cave_x4", "cave_x8", "harvard_x4", "harvard_x8", "gf5"]
+                            'chikusei', 'pavia', 'botswana',  "cave_mulit_x4","cave_mulit_x8", "cave_mulit_x16","cave_mulit_x32","harvard_mulit_x4"]
+    if_hisi = dataset_type in ["cave_x4", "cave_x8", "harvard_x4", "harvard_x8", "gf5", "cave_mulit_x4","cave_mulit_x8", "cave_mulit_x16","cave_mulit_x32","harvard_mulit_x4"]
     
     # configs
     save_format = args.save_format
@@ -343,6 +343,11 @@ def main(args):
             "chikusei",
             "botswana",
             "gf5",
+            "cave_mulit_x4",
+            "cave_mulit_x8",
+            "cave_mulit_x16",
+            "cave_mulit_x32",
+            "harvard_mulit_x4",
         ]:
             d["ms"] = np.asarray(ds.ms[:]) * const
             d["lms"] = np.asarray(ds.lms[:]) * const

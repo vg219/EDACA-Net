@@ -11,7 +11,36 @@ from safetensors import safe_open
 logger = easy_logger(func_name='HISR')
 
 def default_dataset_fn(*x):
-    return x[0]
+    """
+    默认数据集预处理函数，包含clip和归一化处理
+    """
+    data = x[0]
+    if isinstance(data, torch.Tensor):
+        # 1. 首先clip负值 - 对于光谱数据，负值通常是噪声或异常值
+        data = torch.clamp(data, min=0.0)
+
+        data_max = data.max()
+        data_min = data.min()  # 由于已经clip，这里min应该是0或正数
+        
+        if data_max > 1.0:
+            # 如果最大值大于1，进行归一化
+            if data_max > data_min:
+                data = (data - data_min) / (data_max - data_min)
+            else:
+                # 处理常数张量的情况
+                data = torch.zeros_like(data)
+        # 如果数据已经在[0,1]范围内，保持不变
+    
+    # 3. 确保数据类型为float32
+    if data.dtype != torch.float32:
+        data = data.float()
+    
+    # 4. 最终clip确保数据在[0,1]范围内（防止数值计算误差）
+    data = torch.clamp(data, min=0.0, max=1.0)
+    
+    return data
+    ###原来的数据集
+    # return x[0]
 
 DATASET_KEY_MAPPING = {
     'cave': ['GT', 'LRHSI', 'RGB', 'HSI_up'],
@@ -24,6 +53,30 @@ DATASET_KEY_MAPPING = {
     'houston': ['GT', 'LRHSI', 'RGB', 'HSI_up'],
     'pavia': ['GT', 'MS', 'PAN', 'LMS'],
     'botswana': ['GT', 'MS', 'PAN', 'LMS'],
+    'cave_mulit_x4': ['GT', 'LRHSI_4', 'HRMSI', 'lms_4'],
+    'cave_mulit_x8': ['GT', 'LRHSI_8', 'HRMSI', 'lms_8'],
+    'cave_mulit_x16': ['GT', 'LRHSI_16', 'HRMSI', 'lms_16'],
+    'cave_mulit_x32': ['GT', 'LRHSI_32', 'HRMSI', 'lms_32'],
+    'harvard_mulit_x4': ['GT', 'LRHSI_4', 'HRMSI', 'lms_4'],
+    'harvard_mulit_x8': ['GT', 'LRHSI_8', 'HRMSI', 'lms_8'],
+    'harvard_mulit_x16': ['GT', 'LRHSI_16', 'HRMSI', 'lms_16'],
+    'harvard_mulit_x32': ['GT', 'LRHSI_32', 'HRMSI', 'lms_32'],
+    'chikusei_mulit_x4': ['GT', 'LRHSI_4', 'HRMSI', 'lms_4'],
+    'chikusei_mulit_x8': ['GT', 'LRHSI_8', 'HRMSI', 'lms_8'],
+    'chikusei_mulit_x16': ['GT', 'LRHSI_16', 'HRMSI', 'lms_16'],
+    'chikusei_mulit_x32': ['GT', 'LRHSI_32', 'HRMSI', 'lms_32'],
+    'paviac_mulit_x4': ['GT', 'LRHSI_4', 'HRMSI', 'lms_4'],
+    'paviac_mulit_x8': ['GT', 'LRHSI_8', 'HRMSI', 'lms_8'],
+    'paviac_mulit_x16': ['GT', 'LRHSI_16', 'HRMSI', 'lms_16'],
+    'paviac_mulit_x32': ['GT', 'LRHSI_32', 'HRMSI', 'lms_32'],
+    'paviau_mulit_x4': ['GT', 'LRHSI_4', 'HRMSI', 'lms_4'],
+    'paviau_mulit_x8': ['GT', 'LRHSI_8', 'HRMSI', 'lms_8'],
+    'paviau_mulit_x16': ['GT', 'LRHSI_16', 'HRMSI', 'lms_16'],
+    'paviau_mulit_x32': ['GT', 'LRHSI_32', 'HRMSI', 'lms_32'],
+    'botswana_mulit_x4': ['GT', 'LRHSI_4', 'HRMSI', 'lms_4'],
+    'botswana_mulit_x8': ['GT', 'LRHSI_8', 'HRMSI', 'lms_8'],
+    'botswana_mulit_x16': ['GT', 'LRHSI_16', 'HRMSI', 'lms_16'],
+    'botswana_mulit_x32': ['GT', 'LRHSI_32', 'HRMSI', 'lms_32'],
 }
 
 class HISRDatasets(data.Dataset):
@@ -115,23 +168,23 @@ class HISRDatasets(data.Dataset):
 
         # geometrical transformation
         self.aug_prob = aug_prob
-        self.geo_trans = (T.Compose([
-            T.RandomApply([
-                            T.RandomErasing(
-                                p=self.aug_prob,
-                                scale=(0.02, 0.15),
-                                ratio=(0.2, 1.0)
-                            ),
-                            T.RandomAffine(
-                                degrees=(0, 70),
-                                translate=(0.1, 0.2),
-                                scale=(0.95, 1.2),
-                                interpolation=T.InterpolationMode.BILINEAR,
-                            )], 
-                        p=self.aug_prob),
-            ]) if aug_prob != 0.0
-            else lambda *x: x
-        )
+        if aug_prob != 0.0:
+            self.geo_trans = (T.Compose([
+                T.RandomApply([
+                                T.RandomErasing(
+                                    p=self.aug_prob,
+                                    scale=(0.02, 0.15),
+                                    ratio=(0.2, 1.0)
+                                ),
+                                T.RandomAffine(
+                                    degrees=(0, 70),
+                                    translate=(0.1, 0.2),
+                                    scale=(0.95, 1.2),
+                                    interpolation=T.InterpolationMode.BILINEAR,
+                                )], 
+                            p=self.aug_prob),
+                ]) 
+            )
 
     def _split_parts(self, file, load_all=True, rgb_to_bgr=False, keys=None, full=False):
         
@@ -145,9 +198,11 @@ class HISRDatasets(data.Dataset):
         if load_all:
             # load all data in memory
             data = []
+            # breakpoint()
             for k in keys:
+                # logger.info(f'load key {k}')
                 data.append(
-                    self.dataset_fn(torch.tensor(file[k][:], dtype=torch.float32)),
+                    self.dataset_fn(torch.as_tensor(file[k][:], dtype=torch.float32)),
                 )
                 
             if rgb_to_bgr:
@@ -206,25 +261,27 @@ class HISRDatasets(data.Dataset):
 
 
 if __name__ == "__main__":
-    path = r"/Data3/cao/ZiHanCao/datasets/HISI/data_Pavia/Train_Pavia.h5"
+    path = r"/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_train_patches_stride16_size128.h5"
     file = h5py.File(path)
-    dataset = HISRDatasets(file, aug_prob=0., txt_file='/Data3/cao/ZiHanCao/datasets/HISI/data_Pavia/t5_feature_pavia_train.safetensors',
-                           dataset_name='pavia')  # Specify the txt file path
-    dl = data.DataLoader(
-        dataset, batch_size=16, shuffle=True, num_workers=0, pin_memory=True
-    )
-    from tqdm import tqdm
-    for i, data in tqdm(enumerate(dl, 1)):
-        # logger.info(
-        #     f"lr_hsi: {lr_hsi.shape}, rgb: {rgb.shape}, hsi_up: {hsi_up.shape}, gt: {gt.shape}",
-        # )
-        # fig, axes = plt.subplots(ncols=4, figsize=(20, 5))
-        # axes[0].imshow(rgb[0].permute(1, 2, 0).numpy()[..., :3])
-        # axes[1].imshow(lr_hsi[0].permute(1, 2, 0).numpy()[..., :3])
-        # axes[2].imshow(hsi_up[0].permute(1, 2, 0).numpy()[..., :3])
-        # axes[3].imshow(gt[0].permute(1, 2, 0).numpy()[..., :3])
-        # plt.tight_layout(pad=0)
-        # plt.show()
-        # time.sleep(3)
-        # fig.savefig(f'./tmp/{i}.png', dpi=100)
-        pass
+    dataset = HISRDatasets(file, aug_prob=0., txt_file=None,
+                           dataset_name='botswana_mulit_x4')  # Specify the txt file path
+    # dl = data.DataLoader(
+    #     dataset, batch_size=16, shuffle=True, num_workers=1, pin_memory=True
+    # )
+    # from tqdm import tqdm
+    # for i, data in tqdm(enumerate(dl, 1)):
+    #     print(f'batch {i}')
+
+    #     # logger.info(
+    #     #     f"lr_hsi: {lr_hsi.shape}, rgb: {rgb.shape}, hsi_up: {hsi_up.shape}, gt: {gt.shape}",
+    #     # )
+    #     # fig, axes = plt.subplots(ncols=4, figsize=(20, 5))
+    #     # axes[0].imshow(rgb[0].permute(1, 2, 0).numpy()[..., :3])
+    #     # axes[1].imshow(lr_hsi[0].permute(1, 2, 0).numpy()[..., :3])
+    #     # axes[2].imshow(hsi_up[0].permute(1, 2, 0).numpy()[..., :3])
+    #     # axes[3].imshow(gt[0].permute(1, 2, 0).numpy()[..., :3])
+    #     # plt.tight_layout(pad=0)
+    #     # plt.show()
+    #     # time.sleep(3)
+    #     # fig.savefig(f'./tmp/{i}.png', dpi=100)
+    #     pass

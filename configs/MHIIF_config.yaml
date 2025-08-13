@@ -13,6 +13,61 @@ ema_decay: 0.995
 ema_update_every: 1
 
 path:
+  cave_mulit_x4_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/CAVE/CAVE_train_patches_stride32_size128.h5"
+  cave_mulit_x4_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/CAVE/CAVE_test_fullsize.h5"
+  cave_mulit_x8_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/CAVE/CAVE_train_patches_stride32_size128.h5"
+  cave_mulit_x8_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/CAVE/CAVE_test_fullsize.h5"
+  cave_mulit_x16_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/CAVE/CAVE_train_patches_stride32_size128.h5"
+  cave_mulit_x16_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/CAVE/CAVE_test_fullsize.h5"
+  cave_mulit_x32_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/CAVE/CAVE_train_patches_stride32_size128.h5"
+  cave_mulit_x32_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/CAVE/CAVE_test_fullsize.h5"
+
+  harvard_mulit_x4_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Harvard/Harvard_train_patches_stride128_size128.h5"
+  harvard_mulit_x4_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Harvard/Harvard_test_crop1024.h5"
+  harvard_mulit_x8_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Harvard/Harvard_train_patches_stride128_size128.h5"
+  harvard_mulit_x8_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Harvard/Harvard_test_crop1024.h5"
+  harvard_mulit_x16_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Harvard/Harvard_train_patches_stride128_size128.h5"
+  harvard_mulit_x16_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Harvard/Harvard_test_crop1024.h5"
+  harvard_mulit_x32_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Harvard/Harvard_train_patches_stride128_size128.h5"
+  harvard_mulit_x32_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Harvard/Harvard_test_crop1024.h5"
+
+  paviau_mulit_x4_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaU/datasets/PaviaU_train_patches_stride16_size128.h5"
+  paviau_mulit_x4_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaU/datasets/PaviaU_test_crop256x512_patch256.h5"
+  paviau_mulit_x8_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaU/datasets/PaviaU_train_patches_stride16_size128.h5"
+  paviau_mulit_x8_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaU/datasets/PaviaU_test_crop256x512_patch256.h5"
+  paviau_mulit_x16_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaU/datasets/PaviaU_train_patches_stride16_size128.h5"
+  paviau_mulit_x16_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaU/datasets/PaviaU_test_crop256x512_patch256.h5"
+  paviau_mulit_x32_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaU/datasets/PaviaU_train_patches_stride16_size128.h5"
+  paviau_mulit_x32_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaU/datasets/PaviaU_test_crop256x512_patch256.h5"
+
+
+  paviac_mulit_x4_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaCenter/datasets/PaviaCenter_train_patches_stride16_size128.h5"
+  paviac_mulit_x4_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaCenter/datasets/PaviaCenter_test_crop512x1024_patch512.h5"
+  paviac_mulit_x8_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaCenter/datasets/PaviaCenter_train_patches_stride16_size128.h5"
+  paviac_mulit_x8_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaCenter/datasets/PaviaCenter_test_crop512x1024_patch512.h5"
+  paviac_mulit_x16_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaCenter/datasets/PaviaCenter_train_patches_stride16_size128.h5"
+  paviac_mulit_x16_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaCenter/datasets/PaviaCenter_test_crop512x1024_patch512.h5"
+  paviac_mulit_x32_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaCenter/datasets/PaviaCenter_train_patches_stride16_size128.h5"
+  paviac_mulit_x32_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/PaviaCenter/datasets/PaviaCenter_test_crop512x1024_patch512.h5"
+
+  chikusei_mulit_x4_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Chikusei/Chikusei_train_patches_stride32_size128.h5"
+  chikusei_mulit_x4_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Chikusei/Chikusei_test_patches.h5"
+  chikusei_mulit_x8_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Chikusei/Chikusei_train_patches_stride32_size128.h5"
+  chikusei_mulit_x8_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Chikusei/Chikusei_test_patches.h5"
+  chikusei_mulit_x16_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Chikusei/Chikusei_train_patches_stride32_size128.h5"
+  chikusei_mulit_x16_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Chikusei/Chikusei_test_patches.h5"
+  chikusei_mulit_x32_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Chikusei/Chikusei_train_patches_stride32_size128.h5"
+  chikusei_mulit_x32_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Chikusei/Chikusei_test_patches.h5"
+
+  botswana_mulit_x4_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_train_patches_stride16_size128.h5"
+  botswana_mulit_x4_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_test_crop256x1280_patch256.h5"
+  botswana_mulit_x8_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_train_patches_stride16_size128.h5"
+  botswana_mulit_x8_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_test_crop256x1280_patch256.h5"
+  botswana_mulit_x16_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_train_patches_stride16_size128.h5"
+  botswana_mulit_x16_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_test_crop256x1280_patch256.h5"
+  botswana_mulit_x32_train_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_train_patches_stride16_size128.h5"
+  botswana_mulit_x32_val_path: "/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_test_crop256x1280_patch256.h5"
+
   wv3_train_path: "/data2/users/yujieliang/dataset/pansharpening/wv3/training_wv3/train_wv3.h5"
   wv3_val_path: "/data2/users/yujieliang/dataset/pansharpening/wv3/reduced_examples/test_wv3_multiExm1.h5"
   wv3_full_path: "/data2/users/yujieliang/dataset/pansharpening/pansharpening_test/test_wv3_OrigScale_multiExm1.h5"
@@ -85,8 +140,8 @@ network_configs:
     spa_edsr_num: 3
     spe_edsr_num: 3
     mlp_dim: [256,128]
-    scale: 4
-    patch_merge: yes
+    scale: 16
+    patch_merge: no
   MHIIF_g_MHIIF_g:
   ##################### Pansharpening #####################
     ## CAVE
@@ -114,21 +169,22 @@ network_configs:
 
 
   MHIIF_J2_MHIIF_J2:
-    hsi_dim: 31
-    msi_dim: 3
-    feat_dim: 64
-    guide_dim: 64 
-    spa_edsr_num: 3 
-    spe_edsr_num: 3
-    mlp_dim: [256, 128] 
-    scale: 4
-    patch_merge: yes
-      # Hermite RBF 参数
-    use_hermite_rbf: true     # 是否启用Hermite RBF
-    hermite_order: 2          # Hermite阶数 (0-2)
-    n_kernel: 256             # RBF核心数量
-    rbf_hidden_dim: 64        # RBF隐藏层维度
-    hermite_weight: 1       # Hermite RBF输出权重 (0-1)
+      hsi_dim: 31
+      msi_dim: 3
+      feat_dim: 64
+      guide_dim: 64 
+      spa_edsr_num: 3 
+      spe_edsr_num: 3
+      mlp_dim: [256, 128] 
+      scale: 4
+      patch_merge: yes
+      # Hermite RBF 参数 - 简化版本优化
+      use_hermite_rbf: true
+      use_four_neighbors: false    # 关闭四邻域，使用简化版本
+      hermite_order: 2
+      n_kernel: 16               # 可以使用更多核心，因为计算更高效
+      rbf_hidden_dim: 64
+      hermite_weight: 1        # 更依赖RBF建模at 1e-5
 
 
   MHIIF_gridhermit_MHIIF_gridhermit:
@@ -158,38 +214,45 @@ network_configs:
     patch_merge: yes
 
 
-  hermite_rbf_hermite_rbf:
-  ##################### Pansharpening #####################
-      ## CAVE
-        # 基础参数
-    hsi_channels: 31          # 高光谱通道数
-    msi_channels: 3           # 多光谱通道数  
-    scale_factor: 4           # 上采样倍数
-    
-    # Hermite RBF 参数
-    hermite_order: 2          # Hermite阶数 (0: 仅函数值, 1: +一阶导数, 2: +二阶导数)
-    n_kernel: 512             # RBF核心数量
-    adaptive_sigma: true      # 是否使用自适应sigma
-    rbf_type: "hermite_gauss" # RBF类型
-    
-    # 坐标编码参数（可选）
-    use_hash_encoding: false  # 是否使用位置编码（简化版本）
-    hash_levels: 16           # 编码层级数
-    hash_features: 2          # 每层特征数
-    
+  MHIIF_J2_Hermite_MHIIF_J2_Hermite:
     # 网络结构参数
-    # hidden_dim: 128           # 隐藏层维度
-    # n_layers: 4               # 网络层数
-    # hsi_dim: 31
-    # msi_dim: 3
-    # feat_dim: 64
-    # guide_dim: 64
-    # spa_edsr_num: 3
-    # spe_edsr_num: 3
-    # mlp_dim: [256,128]
-    # scale: 4
+    hsi_dim: 31
+    msi_dim: 3
+    feat_dim: 128
+    guide_dim: 128
+    spa_edsr_num: 3
+    spe_edsr_num: 3
+    mlp_dim: [256,128]
+    scale: 4
     patch_merge: yes
+    n_kernels: 512
+    k_neighbors: 4          # 固定的K值，训练过程中不变
+    rbf_type: 'nlin_a'     # 核形状类型：'nlin_s', 'nlin_d', 'nlin_a'
+    ks_alpha: 1.0            # 核形状初始化因子
+    sparse_kernel_grad: False
 
+
+
+  MHIIF_rbf_MHIIF_rbf:
+    # 网络结构参数
+    hsi_dim: 31
+    msi_dim: 3
+    feat_dim: 64
+    guide_dim: 64
+    spa_edsr_num: 3
+    spe_edsr_num: 3
+    mlp_dim: [256,128]
+    scale: 4
+    patch_merge: yes
+    n_kernels: 512
+    k_neighbors: 8          # 固定的K值，训练过程中不变
+    rbf_type: 'nlin_a'     # 核形状类型：'nlin_s', 'nlin_d', 'nlin_a'
+    ks_alpha: 1.0            # 核形状初始化因子
+    sparse_kernel_grad: False
+    hermite_order: 2                 # Hermite多项式最大阶次
+    hermite_fusion_mode: 'branch'    # 'branch' 或 'weighted'
+    hermite_learnable_weights: True  # 是否学习Hermite阶次的组合权重
+    knn_chunk_size: 200000000
   ########################## MEF ##########################
     # img_channel: 1
     # modal_channel: 1

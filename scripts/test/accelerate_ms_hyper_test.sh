@@ -51,6 +51,22 @@
 # --save_mat \
 # --split_patch
 
+# NCCL_P2P_LEVEL="NVL" \
+# NCCL_P2P_DISABLE="1" \
+# NCCL_IB_DISABLE="1" \
+# OMP_NUM_THREADS="6" \
+# accelerate launch \
+# --num_processes 1 \
+# --gpu_ids "6" \
+# --config_file configs/huggingface/accelerate.yaml \
+# accelerate_inference_on_sharpening.py \
+# -c configs/ENACIR_config.yaml \
+# -m ENACIR.ENACIR \
+# --val_bs 1 \
+# --dataset pavia \
+# --model_path "/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat/log_file/ENACIR_ENACIR/pavia/2025-06-18-16-29-50_ENACIR_nnf4ldd5_ENACIR on pavia dataset/weights/ema_model.pth/model.safetensors" \
+# --save_mat 
+
 NCCL_P2P_LEVEL="NVL" \
 NCCL_P2P_DISABLE="1" \
 NCCL_IB_DISABLE="1" \
@@ -60,9 +76,8 @@ accelerate launch \
 --gpu_ids "6" \
 --config_file configs/huggingface/accelerate.yaml \
 accelerate_inference_on_sharpening.py \
--c configs/ENACIR_config.yaml \
--m ENACIR.ENACIR \
+-c configs/MHIIF_config.yaml \
+-m MHIIF.MHIIF_ \
 --val_bs 1 \
---dataset pavia \
---model_path "/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat/log_file/ENACIR_ENACIR/pavia/2025-06-18-16-29-50_ENACIR_nnf4ldd5_ENACIR on pavia dataset/weights/ema_model.pth/model.safetensors" \
---save_mat 
+--dataset cave_mulit_x16 \
+--model_path "/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat/log_file/MHIIF_MHIIF_/cave_mulit_x4/2025-08-13-13-35-49_MHIIF_r07a74ga_MHIIF_ms on cave_mulit_x4 dataset/weights/ema_model.pth/model.safetensors" 

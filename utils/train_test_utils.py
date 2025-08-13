@@ -46,6 +46,30 @@ FUSION_TASK_DATASETS_MAPPING = {
     'pavia': 'HMIF',
     'chikusei': 'HMIF',
     'botswana': 'HMIF',
+    'cave_mulit_x4': 'HMIF',
+    'cave_mulit_x8': 'HMIF',
+    'cave_mulit_x16': 'HMIF',
+    'cave_mulit_x32': 'HMIF',
+    'harvard_mulit_x4': 'HMIF',
+    'harvard_mulit_x8': 'HMIF',
+    'harvard_mulit_x16': 'HMIF',
+    'harvard_mulit_x32': 'HMIF',
+    'chikusei_mulit_x4': 'HMIF',
+    'chikusei_mulit_x8': 'HMIF',
+    'chikusei_mulit_x16': 'HMIF',
+    'chikusei_mulit_x32': 'HMIF',
+    'paviac_mulit_x4': 'HMIF',
+    'paviac_mulit_x8': 'HMIF',
+    'paviac_mulit_x16': 'HMIF',
+    'paviac_mulit_x32': 'HMIF',
+    'paviau_mulit_x4': 'HMIF',
+    'paviau_mulit_x8': 'HMIF',
+    'paviau_mulit_x16': 'HMIF',
+    'paviau_mulit_x32': 'HMIF',
+    'botswana_mulit_x4': 'HMIF',
+    'botswana_mulit_x8': 'HMIF',
+    'botswana_mulit_x16': 'HMIF',
+    'botswana_mulit_x32': 'HMIF',
     # ========= Degradation fusion task ==========
     'dif': 'DIF',
 }
@@ -220,6 +244,30 @@ def get_eval_dataset(args: NameSpace,
         "pavia",
         "chikusei",
         "botswana",
+        "cave_mulit_x4",
+        "cave_mulit_x8",
+        "cave_mulit_x16",
+        "cave_mulit_x32",
+        'harvard_mulit_x4',
+        'harvard_mulit_x8',
+        'harvard_mulit_x16',
+        'harvard_mulit_x32',
+        'chikusei_mulit_x4',
+        'chikusei_mulit_x8',
+        'chikusei_mulit_x16',
+        'chikusei_mulit_x32',
+        'paviac_mulit_x4',
+        'paviac_mulit_x8',
+        'paviac_mulit_x16',
+        'paviac_mulit_x32',
+        'paviau_mulit_x4',
+        'paviau_mulit_x8',
+        'paviau_mulit_x16',
+        'paviau_mulit_x32',
+        'botswana_mulit_x4',
+        'botswana_mulit_x8',
+        'botswana_mulit_x16',
+        'botswana_mulit_x32',
     ]:
         args.fusion_task = 'Pansharpening'
         
@@ -270,6 +318,14 @@ def get_eval_dataset(args: NameSpace,
             
             if args.dataset in ["pavia", "botswana"]:
                 keys = ['GT', 'MS', 'PAN', 'LMS']
+            elif args.dataset in ["cave_mulit_x4", "harvard_mulit_x4", "chikusei_mulit_x4", "paviac_mulit_x4", "paviau_mulit_x4", "botswana_mulit_x4"]:
+                keys = ['GT', 'LRHSI_4', 'HRMSI', 'lms_4']
+            elif args.dataset in ["cave_mulit_x8", "harvard_mulit_x8", "chikusei_mulit_x8", "paviac_mulit_x8", "paviau_mulit_x8", "botswana_mulit_x8"]:
+                keys = ['GT', 'LRHSI_8', 'HRMSI', 'lms_8']
+            elif args.dataset in ["cave_mulit_x16", "harvard_mulit_x16", "chikusei_mulit_x16", "paviac_mulit_x16", "paviau_mulit_x16", "botswana_mulit_x16"]:
+                keys = ['GT', 'LRHSI_16', 'HRMSI', 'lms_16']
+            elif args.dataset in ["cave_mulit_x32", "harvard_mulit_x32", "chikusei_mulit_x32", "paviac_mulit_x32", "paviau_mulit_x32", "botswana_mulit_x32"]:
+                keys = ['GT', 'LRHSI_32', 'HRMSI', 'lms_32']
             else:
                 keys = ["LRHSI", "HSI_up", "RGB", "GT"]
                 
@@ -674,6 +730,30 @@ def get_fusion_dataset(args: "NameSpace | DictConfig"):
         "pavia",
         "chikusei",
         "botswana",
+        "cave_mulit_x4",
+        "cave_mulit_x8",
+        "cave_mulit_x16",
+        "cave_mulit_x32",
+        'harvard_mulit_x4',
+        'harvard_mulit_x8',
+        'harvard_mulit_x16',
+        'harvard_mulit_x32',
+        'chikusei_mulit_x4',
+        'chikusei_mulit_x8',
+        'chikusei_mulit_x16',
+        'chikusei_mulit_x32',
+        'paviac_mulit_x4',
+        'paviac_mulit_x8',
+        'paviac_mulit_x16',
+        'paviac_mulit_x32',
+        'paviau_mulit_x4',
+        'paviau_mulit_x8',
+        'paviau_mulit_x16',
+        'paviau_mulit_x32',
+        'botswana_mulit_x4',
+        'botswana_mulit_x8',
+        'botswana_mulit_x16',
+        'botswana_mulit_x32',
     ]:
         args.task = "sharpening"
 
@@ -755,9 +835,9 @@ def get_fusion_dataset(args: "NameSpace | DictConfig"):
                 return {
                     # "cave":         f"path.cave_txt_{mode}_path",
                     # "harvard":      f"path.harvard_txt_{mode}_path",
-                    "chikusei":     f"path.chikusei_txt_{mode}_path",
-                    "pavia":        f"path.pavia_txt_{mode}_path",
-                    "botswana":     f"path.botswana_txt_{mode}_path",
+                    # "chikusei":     f"path.chikusei_txt_{mode}_path",
+                    # "pavia":        f"path.pavia_txt_{mode}_path",
+                    # "botswana":     f"path.botswana_txt_{mode}_path",
                     "houston":      f"path.houston_txt_{mode}_path",
                 }.get(dataset_name, None)
             
@@ -772,7 +852,11 @@ def get_fusion_dataset(args: "NameSpace | DictConfig"):
             h5_val.close()
 
             ## get txt path
-            if args.dataset[:4] == "cave" or args.dataset[:7] == "harvard": 
+            if (args.dataset[:4] == "cave" or
+              args.dataset[:7] == "harvard" or
+              args.dataset[:8] == "chikusei" or
+              args.dataset[:5] == "pavia" or
+              args.dataset[:8] == "botswana" ): 
                 txt_file_train = None
                 txt_file_val = None
             else:

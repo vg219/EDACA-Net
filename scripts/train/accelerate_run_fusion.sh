@@ -1,4 +1,49 @@
-# accelerate run
+# # accelerate run
+# CUDA_VISIBLE_DEVICES="2" \
+# T_MAX="65536" \
+# NCCL_P2P_LEVEL="NVL" \
+# NCCL_P2P_DISABLE="1" \
+# NCCL_IB_DISABLE="1" \
+# OMP_NUM_THREADS="6" \
+# accelerate launch \
+# --config_file configs/huggingface/accelerate.yaml \
+# --main_process_port 29506 \
+# accelerate_run_main.py \
+# --proj_name MHIIF_J2 \
+# -m 'MHIIF_J2.MHIIF_J2' \
+# -c 'MHIIF_config.yaml' \
+# --dataset cave_mulit_x4 \
+# --num_worker 0 -e 500 --train_bs 4 --val_bs 1 \
+# --aug_probs 0.0 0.0 --loss hermite --grad_accum_steps 1 \
+# --val_n_epoch 10 \
+# --checkpoint_every_n 10 \
+# --comment "MHIIF_J2 on cave_mulit_x4 dataset" \
+# --logger_on \
+# --sanity_check 
+# --resume_path "/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat/log_file/MHIIF_J_MHIIF_J/cave_x4/2025-07-22-11-04-06_MHIIF_7dwi9pbg_MHIIF_J on cave_x4 dataset/weights/checkpoints/checkpoint_108" \
+
+# CUDA_VISIBLE_DEVICES="3" \
+# T_MAX="65536" \
+# NCCL_P2P_LEVEL="NVL" \
+# NCCL_P2P_DISABLE="1" \
+# NCCL_IB_DISABLE="1" \
+# OMP_NUM_THREADS="6" \
+# accelerate launch \
+# --config_file configs/huggingface/accelerate.yaml \
+# --main_process_port 29506 \
+# accelerate_run_main.py \
+# --proj_name MHIIF_J2_Hermite \
+# -m 'MHIIF_J2_Hermite.MHIIF_J2_Hermite' \
+# -c 'MHIIF_config.yaml' \
+# --dataset cave_x4 \
+# --num_worker 0 -e 2000 --train_bs 128 --val_bs 1 \
+# --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
+# --val_n_epoch 10 \
+# --checkpoint_every_n 10 \
+# --comment "MHIIF_J2_Hermite on cave_x4 dataset" \
+# --logger_on 
+# --sanity_check 
+
 CUDA_VISIBLE_DEVICES="0" \
 T_MAX="65536" \
 NCCL_P2P_LEVEL="NVL" \
@@ -9,18 +54,17 @@ accelerate launch \
 --config_file configs/huggingface/accelerate.yaml \
 --main_process_port 29506 \
 accelerate_run_main.py \
---proj_name MHIIF_J2 \
--m 'MHIIF_J2.MHIIF_J2' \
+--proj_name MHIIF_rbf \
+-m 'MHIIF_rbf.MHIIF_rbf' \
 -c 'MHIIF_config.yaml' \
---dataset cave_x4 \
---num_worker 0 -e 500 --train_bs 4 --val_bs 1 \
---aug_probs 0.0 0.0 --loss hermite --grad_accum_steps 1 \
+--dataset harvard_mulit_x4 \
+--num_worker 0 -e 2000 --train_bs 4 --val_bs 1 \
+--aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
 --val_n_epoch 10 \
 --checkpoint_every_n 10 \
---comment "MHIIF_J2 on cave_x4 dataset" \
+--comment "MHIIF_rbf on harvard_mulit_x4 dataset" \
 --logger_on \
 --sanity_check 
-# --resume_path "/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat/log_file/MHIIF_J_MHIIF_J/cave_x4/2025-07-22-11-04-06_MHIIF_7dwi9pbg_MHIIF_J on cave_x4 dataset/weights/checkpoints/checkpoint_108" \
 
 ## accelerate run
 # CUDA_VISIBLE_DEVICES="5" \
@@ -102,13 +146,13 @@ accelerate_run_main.py \
 # --proj_name MHIIF \
 # -m 'MHIIF.MHIIF_' \
 # -c 'MHIIF_config.yaml' \
-# --dataset cave_x4 \
+# --dataset harvard_mulit_x4 \
 # --num_worker 6 -e 2000 --train_bs 4 --val_bs 1 \
 # --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
 # --val_n_epoch 10 \
 # --checkpoint_every_n 10 \
-# --comment "MHIIF_ms on cave_x4 dataset" \
-# --logger_on 
+# --comment "MHIIF_ms on harvard_mulit_x4 dataset" \
+# --logger_on \
 # --sanity_check
 
 # CUDA_VISIBLE_DEVICES="2" \

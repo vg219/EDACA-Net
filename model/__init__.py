@@ -32,10 +32,10 @@ _all_modules = [
     'hermite',
     'MHIIF_J',
     'MHIIF_J2',
-    'MHIIF_gridhermit',
+    'MHIIF_rbf',
     'ENACIR',
     'ENACIR_V2',
-    'MHIIF_HermiteRBF',
+    'MHIIF_J2_Hermite',
 ]
 
 _all_model_class_name = [
@@ -49,10 +49,10 @@ _all_model_class_name = [
     'hermite',
     'MHIIF_J',
     'MHIIF_J2',
-    'MHIIF_gridhermit',
+    'MHIIF_rbf',
     'ENACIR',
     'ENACIR_V2',
-    'MHIIF_HermiteRBF',
+    'MHIIF_J2_Hermite',
 ]
 
 assert len(_all_modules) == len(_all_model_class_name), 'length of modules and registry names should be the same'
