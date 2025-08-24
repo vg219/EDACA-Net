@@ -130,160 +130,11 @@ path:
     roadscene_tno_joint: "/data2/users/yujieliang/dataset/VIF-RoadScene_and_TNO"
 
 network_configs:
-  MHIIF_MHIIF_:
-  ##################### Pansharpening #####################
-    ## CAVE
-    hsi_dim: 31
-    msi_dim: 3
-    feat_dim: 128
-    guide_dim: 128
-    spa_edsr_num: 3
-    spe_edsr_num: 3
-    mlp_dim: [256,128]
-    scale: 16
-    patch_merge: no
-  MHIIF_g_MHIIF_g:
-  ##################### Pansharpening #####################
-    ## CAVE
-    hsi_dim: 31
-    msi_dim: 3
-    feat_dim: 64
-    guide_dim: 64
-    sample_type: "vmap"
-    spa_edsr_num: 3
-    spe_edsr_num: 3
-    mlp_dim: [256,128]
-    scale: 4
-    patch_merge: yes
-    
-  MHIIF_J_MHIIF_J:
-    hsi_dim: 31
-    msi_dim: 3
-    feat_dim: 128
-    guide_dim: 128 
-    spa_edsr_num: 3 
-    spe_edsr_num: 3
-    mlp_dim: [256, 128] 
-    scale: 4
-    patch_merge: yes
+  DHIF_HSI_Fusion: 
+    Ch: 102
+    stages: 4
+    sf: 4
 
-
-  MHIIF_J2_MHIIF_J2:
-      hsi_dim: 31
-      msi_dim: 3
-      feat_dim: 64
-      guide_dim: 64 
-      spa_edsr_num: 3 
-      spe_edsr_num: 3
-      mlp_dim: [256, 128] 
-      scale: 4
-      patch_merge: yes
-      # Hermite RBF 参数 - 简化版本优化
-      use_hermite_rbf: true
-      use_four_neighbors: false    # 关闭四邻域，使用简化版本
-      hermite_order: 2
-      n_kernel: 16               # 可以使用更多核心，因为计算更高效
-      rbf_hidden_dim: 64
-      hermite_weight: 1        # 更依赖RBF建模at 1e-5
-
-
-  MHIIF_gridhermit_MHIIF_gridhermit:
-      hsi_dim: 31
-      msi_dim: 3
-      feat_dim: 64
-      guide_dim: 64 
-      spa_edsr_num: 3 
-      spe_edsr_num: 3
-      mlp_dim: [256, 128] 
-      scale: 4
-      patch_merge: yes
-
-
-
-  hermite_hermite:
-  ##################### Pansharpening #####################
-    ## CAVE
-    hsi_dim: 31
-    msi_dim: 3
-    feat_dim: 64
-    guide_dim: 64
-    spa_edsr_num: 3
-    spe_edsr_num: 3
-    mlp_dim: [256,128]
-    scale: 4
-    patch_merge: yes
-
-
-  MHIIF_J2_Hermite_MHIIF_J2_Hermite:
-    # 网络结构参数
-    hsi_dim: 31
-    msi_dim: 3
-    feat_dim: 128
-    guide_dim: 128
-    spa_edsr_num: 3
-    spe_edsr_num: 3
-    mlp_dim: [256,128]
-    scale: 4
-    patch_merge: yes
-    n_kernels: 512
-    k_neighbors: 4          # 固定的K值，训练过程中不变
-    rbf_type: 'nlin_a'     # 核形状类型：'nlin_s', 'nlin_d', 'nlin_a'
-    ks_alpha: 1.0            # 核形状初始化因子
-    sparse_kernel_grad: False
-
-
-
-  MHIIF_rbf_MHIIF_rbf:
-    # 网络结构参数
-    hsi_dim: 31
-    msi_dim: 3
-    feat_dim: 64
-    guide_dim: 64
-    spa_edsr_num: 3
-    spe_edsr_num: 3
-    mlp_dim: [256,128]
-    scale: 4
-    patch_merge: yes
-    n_kernels: 512
-    k_neighbors: 8          # 固定的K值，训练过程中不变
-    rbf_type: 'nlin_a'     # 核形状类型：'nlin_s', 'nlin_d', 'nlin_a'
-    ks_alpha: 1.0            # 核形状初始化因子
-    sparse_kernel_grad: False
-    hermite_order: 2                 # Hermite多项式最大阶次
-    hermite_fusion_mode: 'branch'    # 'branch' 或 'weighted'
-    hermite_learnable_weights: True  # 是否学习Hermite阶次的组合权重
-    knn_chunk_size: 200000000
-  ########################## MEF ##########################
-    # img_channel: 1
-    # modal_channel: 1
-    # mask_channel: 1
-    # llm_channel: 512
-    # multi_value_mask_max_classes: 20
-    # out_channel: 1
-    # width: 32
-    # middle_blk_num: 1
-    # enc_blk_nums: [1, 1]
-    # dec_blk_nums: [1, 1]
-    # chan_upscales: [1, 1]
-    # mid_window_size: 0
-    # enc_window_sizes: [0,0]
-    # dec_window_sizes: [0,0]
-    # ffn_hidden_rates: [2, 2]
-    # MIFM_img_downsample_ratios: [8, 8]
-    # pt_img_size: 256
-    # drop_path_rate: 0.2
-    # drop_txt_ratio: 0.0
-    # txt_embd_drop_ratio: 0.0
-    # if_abs_pos: no
-    # upscale: 1
-    # with_checkpoint: yes
-    # add_multi_modal_tokens: no
-    # end_proj_type: 3conv
-    # reconstruction_head: fusion  # [sr, fusion]
-    # fusion_prior: mean
-    # scan_mode: K2   # [K2] may be good
-    # shift_type: none
-    # layer_resi_connection: 1conv
 
 loss_cfg:
   l1ssim:
@@ -291,10 +142,7 @@ loss_cfg:
     implem_by: torch
     window_size: 5
     grad_norm: no
-  hermite:
-    lambda_grad: 0.05
-    lambda_smooth: 0.01
-    lambda_sparsity: 0.001
+
 
 
 metric_name_for_save:
@@ -306,5 +154,5 @@ metric_name_for_save:
 
 logger_config:
   base_path: ./log_file/
-  name: MHIIF
+  name: DHIF
   file_mode: w

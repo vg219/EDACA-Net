@@ -282,6 +282,7 @@ def train(
             torch.cuda.empty_cache()
             gc.collect()
         logger.print(f">>> sanity check done, ready to train the model")
+        model.train()
     
     optim_val_loss = math.inf
     fp_scaler = None  # accelerator.scaler if accelerator.mixed_precision != 'fp32' else None

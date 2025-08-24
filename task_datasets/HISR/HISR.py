@@ -10,7 +10,7 @@ from safetensors import safe_open
 
 logger = easy_logger(func_name='HISR')
 
-def default_dataset_fn(*x):
+def default_dataset_fn(*x, dataset_name=None):
     """
     默认数据集预处理函数，包含clip和归一化处理
     """
@@ -22,14 +22,25 @@ def default_dataset_fn(*x):
         data_max = data.max()
         data_min = data.min()  # 由于已经clip，这里min应该是0或正数
         
-        if data_max > 1.0:
-            # 如果最大值大于1，进行归一化
+        # 特殊处理Harvard多尺度数据集
+        harvard_mulit_datasets = [
+            'harvard_mulit_x4',
+            'harvard_mulit_x8', 
+            'harvard_mulit_x16',
+            'harvard_mulit_x32'
+        ]
+        
+        # 判断是否需要强制归一化
+        force_normalize = dataset_name in harvard_mulit_datasets
+        
+        if data_max > 1.0 or force_normalize:
+            # 如果最大值大于1，或者是指定的Harvard数据集，进行归一化
             if data_max > data_min:
                 data = (data - data_min) / (data_max - data_min)
             else:
                 # 处理常数张量的情况
                 data = torch.zeros_like(data)
-        # 如果数据已经在[0,1]范围内，保持不变
+        # 如果数据已经在[0,1]范围内且不是Harvard数据集，保持不变
     
     # 3. 确保数据类型为float32
     if data.dtype != torch.float32:
@@ -202,7 +213,7 @@ class HISRDatasets(data.Dataset):
             for k in keys:
                 # logger.info(f'load key {k}')
                 data.append(
-                    self.dataset_fn(torch.as_tensor(file[k][:], dtype=torch.float32)),
+                    self.dataset_fn(torch.as_tensor(file[k][:], dtype=torch.float32), dataset_name=self.dataset_name),
                 )
                 
             if rgb_to_bgr:
@@ -261,27 +272,26 @@ class HISRDatasets(data.Dataset):
 
 
 if __name__ == "__main__":
-    path = r"/data2/users/yujieliang/dataset/HISI/ASSR/Botswana/datasets/Botswana_train_patches_stride16_size128.h5"
+    path = r"/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat/data/ASSR/Harvard/Harvard_test_crop1024.h5"
     file = h5py.File(path)
     dataset = HISRDatasets(file, aug_prob=0., txt_file=None,
-                           dataset_name='botswana_mulit_x4')  # Specify the txt file path
-    # dl = data.DataLoader(
-    #     dataset, batch_size=16, shuffle=True, num_workers=1, pin_memory=True
-    # )
+                           dataset_name='harvard_mulit_x4')  # Specify the txt file path
+    dl = data.DataLoader(
+        dataset, batch_size=1, shuffle=True, num_workers=1, pin_memory=True
+    )
     # from tqdm import tqdm
     # for i, data in tqdm(enumerate(dl, 1)):
-    #     print(f'batch {i}')
 
-    #     # logger.info(
-    #     #     f"lr_hsi: {lr_hsi.shape}, rgb: {rgb.shape}, hsi_up: {hsi_up.shape}, gt: {gt.shape}",
-    #     # )
-    #     # fig, axes = plt.subplots(ncols=4, figsize=(20, 5))
-    #     # axes[0].imshow(rgb[0].permute(1, 2, 0).numpy()[..., :3])
-    #     # axes[1].imshow(lr_hsi[0].permute(1, 2, 0).numpy()[..., :3])
-    #     # axes[2].imshow(hsi_up[0].permute(1, 2, 0).numpy()[..., :3])
-    #     # axes[3].imshow(gt[0].permute(1, 2, 0).numpy()[..., :3])
-    #     # plt.tight_layout(pad=0)
-    #     # plt.show()
-    #     # time.sleep(3)
-    #     # fig.savefig(f'./tmp/{i}.png', dpi=100)
+    #     logger.info(
+    #         f"lr_hsi: {lr_hsi.shape}, rgb: {rgb.shape}, hsi_up: {hsi_up.shape}, gt: {gt.shape}",
+    #     )
+    #     fig, axes = plt.subplots(ncols=4, figsize=(20, 5))
+    #     axes[0].imshow(rgb[0].permute(1, 2, 0).numpy()[..., :3])
+    #     axes[1].imshow(lr_hsi[0].permute(1, 2, 0).numpy()[..., :3])
+    #     axes[2].imshow(hsi_up[0].permute(1, 2, 0).numpy()[..., :3])
+    #     axes[3].imshow(gt[0].permute(1, 2, 0).numpy()[..., :3])
+    #     plt.tight_layout(pad=0)
+    #     plt.show()
+    #     time.sleep(3)
+    #     fig.savefig(f'./tmp/{i}.png', dpi=100)
     #     pass

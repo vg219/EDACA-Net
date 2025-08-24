@@ -1,9 +1,10 @@
+# from pydantic import BaseModel
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 import torch.nn.functional as F
 
-from model.base_model import PatchMergeModule
+from model.base_model import register_model, BaseModel ,PatchMergeModule
 
 
 class Encoder(nn.Module):
@@ -103,8 +104,8 @@ class Decoder(nn.Module):
         k3 = self.K_3(D4)
         return k1, k2, k3
 
-
-class HSI_Fusion(nn.Module):
+@register_model("DHIF")
+class HSI_Fusion(BaseModel):
     def __init__(self, Ch, stages, sf):
         super(HSI_Fusion, self).__init__()
         self.Ch = Ch
@@ -290,37 +291,74 @@ class HSI_Fusion(nn.Module):
             Zt = self.reconnect(Res1, Res2, Zt, Ut, i)
         return Zt
     
-    def patch_merge_step(self, ms, lms, pan, *args, **kwargs):
-        sr = self._forward_implem(pan, ms)
-        
-        return sr
+    def sharpening_train_step(self,lms, lr_hsi, pan, gt, criterion):
+        sr = self._forward_implem(pan, lr_hsi)
+        loss = criterion(sr, gt)
+        return sr, loss
+
+    def sharpening_val_step(self,
+                            lms: torch.Tensor,
+                            lr_hsi: torch.Tensor,
+                            pan: torch.Tensor,
+                            txt: "torch.Tensor | None"=None,
+                            patch_merge: "callable | bool | None"=True,
+                            *,
+                            inference_wo_txt: bool=False,
+                            **_kwargs):  
+        r = pan.shape[-1] // lr_hsi.shape[-1]
+        if patch_merge:
+            # logger.debug(f"using patch merge module")
+            _patch_merge_model = PatchMergeModule(
+                self,
+                crop_batch_size=4,
+                patch_size_list=[32, 32*r],
+                scale=r,
+                patch_merge_step=self.patch_merge_step,
+            )
+            pred = _patch_merge_model.forward_chop(lr_hsi, pan)[0]
+        else:
+            pred = self._forward_implem(pan,lr_hsi)
+
+        return pred.clip(0, 1)
+
+    def patch_merge_step(self, lr_hsi, pan, *args, **kwargs):
+
+        return self._forward_implem(pan, lr_hsi)
     
 if __name__ == "__main__":
-    device = 'cuda:1'
-    net = HSI_Fusion(31, 4, 8).to(device)
-    ms = torch.randn(1, 31, 8, 8).to(device)
-    hs = torch.randn(1, 3, 64, 64).to(device)
+    torch.cuda.set_device("cuda:1")
+    net = HSI_Fusion(31, 4, 16).cuda()
+    hr = torch.rand(1, 3, 128, 128).cuda()
+    lr = torch.rand(1, 31, 8, 8).cuda()
+    lms = torch.rand(1, 31, 128, 128).cuda()
+    gt = torch.rand(1, 31, 128, 128).cuda()
+    criterion = torch.nn.L1Loss()
+    T, _ = net.sharpening_train_step(lms, lr, hr, gt, criterion)
+    print(T.shape)
     
-    with torch.no_grad():
-        # import time
-        # t1 = time.time()
-        # for _ in range(10):
-        sr = net._forward_implem(hs, ms)
+    
+    # with torch.no_grad():
+    #     # import time
+    #     # t1 = time.time()
+    #     # for _ in range(10):
+    #     sr = net._forward_implem(hs, ms)
         
-        # net = PatchMergeModule(net, crop_batch_size=12, patch_size_list=[16, 64, 64])
+    #     # net = PatchMergeModule(net, crop_batch_size=12, patch_size_list=[16, 64, 64])
         
-        # sr = net.forward_chop(ms, hs, hs)[0]
-        # import time
-        # t1 = time.time()
-        # for _ in range(10):
-        #     sr = net.forward_chop(ms, hs, hs)[0]
+    #     # sr = net.forward_chop(ms, hs, hs)[0]
+    #     # import time
+    #     # t1 = time.time()
+    #     # for _ in range(10):
+    #     #     sr = net.forward_chop(ms, hs, hs)[0]
             
-        # print(sr.shape)
-        # print(f'===> test time: {(time.time()-t1)/10}')
+    #     # print(sr.shape)
+    #     # print(f'===> test time: {(time.time()-t1)/10}')
         
-        from fvcore.nn import flop_count_table, FlopCountAnalysis, parameter_count_table
+    #     from fvcore.nn import flop_count_table, FlopCountAnalysis, parameter_count_table
 
-        net.forward = net._forward_implem
-        flops = FlopCountAnalysis(net, (hs, ms))
-        print(flop_count_table(flops, max_depth=3))
-        print(flops.total() / 1e9, 'G')
+    #     net.forward = net._forward_implem
+    #     flops = FlopCountAnalysis(net, (hs, ms))
+    #     print(flop_count_table(flops, max_depth=3))
+    #     print(flops.total() / 1e9, 'G')
+### pavia     38.785241M             | 0.311194T 311.194386432 G
+### chikusei  48.658315M             | 0.466313T  466.313281536 G

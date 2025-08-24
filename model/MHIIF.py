@@ -282,7 +282,7 @@ class MHIIF_(BaseModel):
             
             # 提取特征
             coord = make_coord(HR_MSI_down.shape[2:]).cuda()
-            hr_guide = self.image_encoder(HR_MSI_down)  # 提取下采样后的高分辨率图像特征
+            hr_guide = self.image_encoder(HR_MSI_down)  # 提取下采modelmodel/MIMO_SST.py/MIMO_SST.py样后的高分辨率图像特征
             feat = self.depth_encoder(LR_HSI)  # 提取当前 LR_HSI 特征
             
             # 查询与特征融合

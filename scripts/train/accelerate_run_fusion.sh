@@ -44,27 +44,27 @@
 # --logger_on 
 # --sanity_check 
 
-CUDA_VISIBLE_DEVICES="0" \
-T_MAX="65536" \
-NCCL_P2P_LEVEL="NVL" \
-NCCL_P2P_DISABLE="1" \
-NCCL_IB_DISABLE="1" \
-OMP_NUM_THREADS="6" \
-accelerate launch \
---config_file configs/huggingface/accelerate.yaml \
---main_process_port 29506 \
-accelerate_run_main.py \
---proj_name MHIIF_rbf \
--m 'MHIIF_rbf.MHIIF_rbf' \
--c 'MHIIF_config.yaml' \
---dataset harvard_mulit_x4 \
---num_worker 0 -e 2000 --train_bs 4 --val_bs 1 \
---aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
---val_n_epoch 10 \
---checkpoint_every_n 10 \
---comment "MHIIF_rbf on harvard_mulit_x4 dataset" \
---logger_on \
---sanity_check 
+# CUDA_VISIBLE_DEVICES="0" \
+# T_MAX="65536" \
+# NCCL_P2P_LEVEL="NVL" \
+# NCCL_P2P_DISABLE="1" \
+# NCCL_IB_DISABLE="1" \
+# OMP_NUM_THREADS="6" \
+# accelerate launch \
+# --config_file configs/huggingface/accelerate.yaml \
+# --main_process_port 29506 \
+# accelerate_run_main.py \
+# --proj_name MHIIF_rbf \
+# -m 'MHIIF_rbf.MHIIF_rbf' \
+# -c 'MHIIF_config.yaml' \
+# --dataset harvard_mulit_x4 \
+# --num_worker 0 -e 2000 --train_bs 4 --val_bs 1 \
+# --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
+# --val_n_epoch 10 \
+# --checkpoint_every_n 10 \
+# --comment "MHIIF_rbf on harvard_mulit_x4 dataset" \
+# --logger_on \
+# --sanity_check 
 
 ## accelerate run
 # CUDA_VISIBLE_DEVICES="5" \
@@ -446,3 +446,70 @@ accelerate_run_main.py \
 # --ckpt_max_limit 10 \
 # --only_y_train \
 # --resume_path "/Data3/cao/ZiHanCao/exps/panformer/log_file/swinfusion_SwinFusion/med_harvard/2024-11-22-16-36-10_SwinFusion_w59ekzqg_med_harvard_swinfusion/weights/checkpoints/checkpoint_3"
+
+
+# CUDA_VISIBLE_DEVICES="1" \
+# T_MAX="65536" \
+# NCCL_P2P_LEVEL="NVL" \
+# NCCL_P2P_DISABLE="1" \
+# NCCL_IB_DISABLE="1" \
+# OMP_NUM_THREADS="6" \
+# accelerate launch \
+# --config_file configs/huggingface/accelerate.yaml \
+# --main_process_port 29506 \
+# accelerate_run_main.py \
+# --proj_name MIMO_SST \
+# -m 'MIMO_SST.Net' \
+# -c 'MIMO_SST_config.yaml' \
+# --dataset paviac_mulit_x4 \
+# --num_worker 6 -e 1000 --train_bs 16 --val_bs 1 \
+# --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
+# --val_n_epoch 10 \
+# --checkpoint_every_n 10 \
+# --comment "MIMO_SST on paviac_multi_x4 dataset" \
+# --logger_on \
+# --sanity_check 
+
+# CUDA_VISIBLE_DEVICES="2" \
+# T_MAX="65536" \
+# NCCL_P2P_LEVEL="NVL" \
+# NCCL_P2P_DISABLE="1" \
+# NCCL_IB_DISABLE="1" \
+# OMP_NUM_THREADS="6" \
+# accelerate launch \
+# --config_file configs/huggingface/accelerate.yaml \
+# --main_process_port 29506 \
+# accelerate_run_main.py \
+# --proj_name DHIF \
+# -m 'DHIF.HSI_Fusion' \
+# -c 'DHIF_config.yaml' \
+# --dataset harvard_mulit_x4 \
+# --num_worker 6 -e 1000 --train_bs 16 --val_bs 1 \
+# --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
+# --val_n_epoch 10 \
+# --checkpoint_every_n 10 \
+# --comment "DHIF on harvard_multi_x4 dataset" \
+# --logger_on \
+# --sanity_check 
+
+CUDA_VISIBLE_DEVICES="4" \
+T_MAX="65536" \
+NCCL_P2P_LEVEL="NVL" \
+NCCL_P2P_DISABLE="1" \
+NCCL_IB_DISABLE="1" \
+OMP_NUM_THREADS="6" \
+accelerate launch \
+--config_file configs/huggingface/accelerate.yaml \
+--main_process_port 29506 \
+accelerate_run_main.py \
+--proj_name DCT \
+-m 'DCT.DCT' \
+-c 'DCT_config.yaml' \
+--dataset cave_mulit_x4 \
+--num_worker 6 -e 1000 --train_bs 2 --val_bs 1 \
+--aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
+--val_n_epoch 10 \
+--checkpoint_every_n 10 \
+--comment "DCT on cave_multi_x4 dataset" \
+--logger_on \
+--sanity_check 

@@ -553,12 +553,12 @@ class Net(BaseModel):
     def __init__(self, in_chan=8):
         super(Net, self).__init__()
         pan_chan = 3
-        inp_channels = 48*2+in_chan+pan_chan
+        inp_channels = 48 * 2 + in_chan + pan_chan
         dim = 48
         num_blocks = [1, 1, 1, 1]
         heads = [1, 1, 1, 1]
         ffn_expansion_factor = 2.66
-        
+
         bias = False
         LayerNorm_type = "WithBias"
         self.patch_embed = OverlapPatchEmbed(inp_channels, dim)
@@ -687,7 +687,7 @@ class Net(BaseModel):
         else:
             return X
 
-    def train_step(self, ms, lms, pan, gt, criterion):
+    def sharpening_train_step(self, lms, lr_hsi, pan, gt, criterion):
         sr_d4, sr_d2, sr = self._forward_implem(pan, lms)
         l1, loss_d4 = criterion(sr_d4, F.interpolate(gt, size=sr_d4.shape[-2:]))
         l2, loss_d2 = criterion(sr_d2, F.interpolate(gt, size=sr_d2.shape[-2:]))
@@ -700,23 +700,33 @@ class Net(BaseModel):
         return sr, ((l1 + l2 + l3) / 3, loss_d1)
 
     @torch.no_grad()
-    def val_step(self, ms, lms, pan, patch_merge=False):
-        self.up_factor = 4
+    def sharpening_val_step(
+        self,
+        lms: torch.Tensor,
+        lr_hsi: torch.Tensor,
+        pan: torch.Tensor,
+        txt: "torch.Tensor | None" = None,
+        patch_merge: "callable | bool | None" = True,
+        *,
+        inference_wo_txt: bool = False,
+        **_kwargs,
+    ):
+        r = pan.shape[-1] // lr_hsi.shape[-1]
         if patch_merge:
             _patch_merge_model = PatchMergeModule(
                 self,
-                crop_batch_size=64,
-                patch_size_list=[16, 16 * self.up_factor, 16 * self.up_factor],
-                scale=self.up_factor,
+                crop_batch_size=32,
+                patch_size_list=[128, 128],
+                scale=1,
                 patch_merge_step=self.patch_merge_step,
             )
-            sr = _patch_merge_model.forward_chop(ms, lms, pan)[0]
+            sr = _patch_merge_model.forward_chop(lms, pan)[0]
         else:
             sr = self._forward_implem(pan, lms)
 
-        return sr
+        return torch.clip(sr, 0, 1)
 
-    def patch_merge_step(self, ms, lms, pan):
+    def patch_merge_step(self, lms, pan, *args, **kwargs):
         sr = self._forward_implem(pan, lms)
 
         return sr
@@ -725,30 +735,38 @@ class Net(BaseModel):
 if __name__ == "__main__":
     from utils import get_loss
 
-    torch.cuda.set_device("cuda:0")
+    torch.cuda.set_device("cuda:1")
 
-    loss_fn = get_loss("l1ssim")
+    # loss_fn = get_loss("l1ssim")
 
-    ms = torch.randn(1, 31, 8, 8).cuda()
-    lms = torch.randn(1, 31, 64, 64).cuda()
-    pan = torch.randn(1, 3, 64, 64).cuda()
-    gt = torch.randn(1, 31, 64, 64).cuda()
+    ms = torch.randn(1, 31, 128, 128).cuda()
+    lms = torch.randn(1, 31, 512, 512).cuda()
+    pan = torch.randn(1, 3, 512, 512).cuda()
+    gt = torch.randn(1, 31, 512, 512).cuda()
 
-    net = Net(lms.shape[1]).cuda()
-    # sr, loss = net.train_step(None, lms, pan, gt, loss_fn)
-    # loss[0].backward()
-    # print(sr.shape, loss)
-    
+    net = Net(31).cuda()
+    # net.train()
+    # sr = net._forward_implem(pan,lms)
+    net.eval()
+    sr = net.sharpening_val_step(lms, ms, pan, patch_merge=True)
+    print(sr.shape)
+
+    # d_grads = {}
+    # for n, p in net.named_parameters():
+    #     if p.grad is None:
+    #         print(n, "has no grad")
+
     # net.eval()
     # sr = net.val_step(ms, lms, pan)
-    
+
     # print(sr.shape)
-    
+
     from fvcore.nn import flop_count_table, FlopCountAnalysis, parameter_count_table
 
     net.forward = net._forward_implem
+    print(net(pan, lms).shape)
     flops = FlopCountAnalysis(net, (pan, lms))
     print(flop_count_table(flops, max_depth=3))
 
-    
-    
+    ### pavia    5.226832M              | 2.248099G
+    ### chikusei 5.318468M              | 2.504708G

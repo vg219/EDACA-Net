@@ -29,89 +29,89 @@ class MLP(nn.Module):
         x = self.layers(x)
         return x
 
-class Attention(nn.Module):
-    r""" Window based multi-head self attention (W-MSA) module with relative position bias.
-    It supports both of shifted and non-shifted window.
+# class Attention(nn.Module):
+#     r""" Window based multi-head self attention (W-MSA) module with relative position bias.
+#     It supports both of shifted and non-shifted window.
 
-    Args:
-        dim (int): Number of input channels.
-        num_heads (int): Number of attention heads.
-        qkv_bias (bool, optional):  If True, add a learnable bias to query, key, value. Default: True
-        qk_scale (float | None, optional): Override default qk scale of head_dim ** -0.5 if set
-        attn_drop (float, optional): Dropout ratio of attention weight. Default: 0.0
-        proj_drop (float, optional): Dropout ratio of output. Default: 0.0
-    """
+#     Args:
+#         dim (int): Number of input channels.
+#         num_heads (int): Number of attention heads.
+#         qkv_bias (bool, optional):  If True, add a learnable bias to query, key, value. Default: True
+#         qk_scale (float | None, optional): Override default qk scale of head_dim ** -0.5 if set
+#         attn_drop (float, optional): Dropout ratio of attention weight. Default: 0.0
+#         proj_drop (float, optional): Dropout ratio of output. Default: 0.0
+#     """
 
-    def __init__(self, dim, num_heads, qkv_bias=True, qk_scale=None, attn_drop=0., proj_drop=0.):
+#     def __init__(self, dim, num_heads, qkv_bias=True, qk_scale=None, attn_drop=0., proj_drop=0.):
 
-        super().__init__()
-        self.dim = dim
-        self.num_heads = num_heads
-        head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
-        self.qkv_c = nn.Linear(dim, dim * 3, bias=qkv_bias)
-        self.qkv_g = nn.Linear(dim, dim * 3, bias=qkv_bias)
-        self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(dim, dim-1)
-        self.proj_drop = nn.Dropout(proj_drop)
+#         super().__init__()
+#         self.dim = dim
+#         self.num_heads = num_heads
+#         head_dim = dim // num_heads
+#         self.scale = qk_scale or head_dim ** -0.5
+#         self.qkv_c = nn.Linear(dim, dim * 3, bias=qkv_bias)
+#         self.qkv_g = nn.Linear(dim, dim * 3, bias=qkv_bias)
+#         self.attn_drop = nn.Dropout(attn_drop)
+#         self.proj = nn.Linear(dim, dim-1)
+#         self.proj_drop = nn.Dropout(proj_drop)
 
-        # trunc_normal_(self.relative_position_bias_table, std=.02)
-        self.softmax = nn.Softmax(dim=-1)
+#         # trunc_normal_(self.relative_position_bias_table, std=.02)
+#         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, pred, grad):
-        """
-        Args:
-            x: input features with shape of (num_windows*B, N, C)
-            mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
-        """
-        B_, N, C = pred.shape
+#     def forward(self, pred, grad):
+#         """
+#         Args:
+#             x: input features with shape of (num_windows*B, N, C)
+#             mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
+#         """
+#         B_, N, C = pred.shape
         
-        qkv_c = self.qkv_c(pred).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        qkv_g = self.qkv_g(grad).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        q_c, k_c, v_c = qkv_c[0], qkv_c[1], qkv_c[2]  # make torchscript happy (cannot use tensor as tuple)
-        q_g, k_g, v_g = qkv_g[0], qkv_g[1], qkv_g[2]
+#         qkv_c = self.qkv_c(pred).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+#         qkv_g = self.qkv_g(grad).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+#         q_c, k_c, v_c = qkv_c[0], qkv_c[1], qkv_c[2]  # make torchscript happy (cannot use tensor as tuple)
+#         q_g, k_g, v_g = qkv_g[0], qkv_g[1], qkv_g[2]
         
-        q_c = q_c * self.scale
-        attn = (q_c @ k_g.transpose(-2, -1))
-        attn = self.softmax(attn)
+#         q_c = q_c * self.scale
+#         attn = (q_c @ k_g.transpose(-2, -1))
+#         attn = self.softmax(attn)
 
-        attn = self.attn_drop(attn)
+#         attn = self.attn_drop(attn)
 
-        x = (attn @ v_g).transpose(1, 2).reshape(B_, N, C)
-        x = self.proj(x)
-        x = self.proj_drop(x)
-        return x
+#         x = (attn @ v_g).transpose(1, 2).reshape(B_, N, C)
+#         x = self.proj(x)
+#         x = self.proj_drop(x)
+#         return x
 
 
     
-class FixedSymmetricConvolution(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, direction):
-        super(FixedSymmetricConvolution, self).__init__()
-        self.direction = direction
-        # 创建卷积核参数，并将其初始化为随机值
-        self.weight = nn.Parameter(torch.randn(out_channels, in_channels, kernel_size, kernel_size))
+# class FixedSymmetricConvolution(nn.Module):
+#     def __init__(self, in_channels, out_channels, kernel_size, direction):
+#         super(FixedSymmetricConvolution, self).__init__()
+#         self.direction = direction
+#         # 创建卷积核参数，并将其初始化为随机值
+#         self.weight = nn.Parameter(torch.randn(out_channels, in_channels, kernel_size, kernel_size))
             
-        self.symmetricize_weight()
+#         self.symmetricize_weight()
 
-    def forward(self, x):
-        # 应用卷积操作
-        return nn.functional.conv2d(x, self.weight, padding=1)
+#     def forward(self, x):
+#         # 应用卷积操作
+#         return nn.functional.conv2d(x, self.weight, padding=1)
 
-    def symmetricize_weight(self):
-        # 对称化卷积核：中间一列为0，第一列和第三列的值互为相反数
-        kernel_size = self.weight.size(-1)
-        if self.direction == 0:
-            middle_col = kernel_size // 2
-            self.weight.data[:, :, :, middle_col] = 0
-            self.weight.data[:, :, :, 0] = -self.weight.data[:, :, :, -1].clone().detach()
-            # 固定中间一列为0
-            self.weight.data[:, :, :, middle_col].requires_grad = False
-        elif self.direction == 1:
-            middle_row = kernel_size // 2
-            self.weight.data[:, :,middle_row,:] = 0
-            # 第一行和第三行的值互为相反数
-            self.weight.data[:, :, 0, :] = -self.weight.data[:, :, -1, :].clone().detach()
-            self.weight.data[:, :, middle_row, :].requires_grad = False
+#     def symmetricize_weight(self):
+#         # 对称化卷积核：中间一列为0，第一列和第三列的值互为相反数
+#         kernel_size = self.weight.size(-1)
+#         if self.direction == 0:
+#             middle_col = kernel_size // 2
+#             self.weight.data[:, :, :, middle_col] = 0
+#             self.weight.data[:, :, :, 0] = -self.weight.data[:, :, :, -1].clone().detach()
+#             # 固定中间一列为0
+#             self.weight.data[:, :, :, middle_col].requires_grad = False
+#         elif self.direction == 1:
+#             middle_row = kernel_size // 2
+#             self.weight.data[:, :,middle_row,:] = 0
+#             # 第一行和第三行的值互为相反数
+#             self.weight.data[:, :, 0, :] = -self.weight.data[:, :, -1, :].clone().detach()
+#             self.weight.data[:, :, middle_row, :].requires_grad = False
 
         
 
@@ -140,20 +140,20 @@ class MHIIF_gridhermit(BaseModel):
         #                                            patch_size_list=[16, 16*self.scale, 16*self.scale],
         #                                            )
 
-    def grad_gt(self, feat):
-        sobel_x = torch.tensor([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0).cuda()
-        sobel_y = torch.tensor([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0).cuda()
+    # def grad_gt(self, feat):
+    #     sobel_x = torch.tensor([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0).cuda()
+    #     sobel_y = torch.tensor([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0).cuda()
 
-        # 使用卷积操作计算梯度
-        b, c, h, w = feat.shape
-        gradient_x = F.conv2d(feat, sobel_x.expand(c, 1, 3, 3), padding=1, groups=c)
-        gradient_y = F.conv2d(feat, sobel_y.expand(c, 1, 3, 3), padding=1, groups=c)
+    #     # 使用卷积操作计算梯度
+    #     b, c, h, w = feat.shape
+    #     gradient_x = F.conv2d(feat, sobel_x.expand(c, 1, 3, 3), padding=1, groups=c)
+    #     gradient_y = F.conv2d(feat, sobel_y.expand(c, 1, 3, 3), padding=1, groups=c)
 
-        # 计算梯度大小和方向
-        # gradient_magnitude = torch.sqrt(gradient_x ** 2 + gradient_y ** 2)
-        # gradient_direction = torch.atan2(gradient_y, gradient_x)
+    #     # 计算梯度大小和方向
+    #     # gradient_magnitude = torch.sqrt(gradient_x ** 2 + gradient_y ** 2)
+    #     # gradient_direction = torch.atan2(gradient_y, gradient_x)
 
-        return torch.cat([gradient_x, gradient_y],dim=1)
+    #     return torch.cat([gradient_x, gradient_y],dim=1)
     
     def query(self, feat, coord, hr_guide):
 
@@ -263,61 +263,6 @@ class MHIIF_gridhermit(BaseModel):
             LR_HSI = ret + LR_HSI_up
         
         return LR_HSI
-    
-    def _forward_implem_v3(self, HR_MSI, lms, LR_HSI):
-        # 获取输入 LR_HSI 和目标 HR_MSI 的初始尺寸
-        hr_guide = self.image_encoder(HR_MSI)  # Bx128xHxW# Bx128xhxw
-        feat = self.depth_encoder(LR_HSI)      # Bx128xhxw 
-        _, _, h_LR, w_LR = feat.shape
-        _, _, h_HR, w_HR = hr_guide.shape
-        coord = make_coord(hr_guide.shape[2:]).cuda()
-        # 计算需要的总的放大倍数 (如 n 倍)
-        total_scale_factor_h = h_HR / h_LR
-        total_scale_factor_w = w_HR / w_LR
-        upscale_factor = self.scale
-        
-        # 每次上采样的 scale_factor，可以根据需要的上采样次数来决定
-        # 假设我们需要 log2(n) 次的上采样，即每次上采样 2 倍
-        num_steps = int(upscale_factor).bit_length() - 1  # 计算需要的上采样次数
-        scale_factor_h = float(total_scale_factor_h ** (1.0 / num_steps))  # 每次高度放大比例
-        scale_factor_w = float(total_scale_factor_w ** (1.0 / num_steps))  # 每次宽度放大比例
-        
-        # 开始逐步上采样
-        LR_HSI_up = feat.clone()
-        for _ in range(num_steps):
-            # 当前 LR_HSI 尺寸            
-            
-            ret = self.query(LR_HSI_up, coord, hr_guide)
-            
-            # 动态上采样，scale_factor 每次都是计算出的自适应值
-            LR_HSI_up = torch.nn.functional.interpolate(LR_HSI_up, scale_factor=(scale_factor_h, scale_factor_w), mode='bilinear', align_corners=False)
-            
-            # 计算下采样因子，确保 HR_MSI_down 与 LR_HSI_up 尺寸匹配
-            # downscale_factor_h = float(h_HR / h / scale_factor_h)
-            # downscale_factor_w = float(w_HR / w / scale_factor_w)
-            
-            # HR_MSI_down = torch.nn.functional.interpolate(hr_guide, scale_factor=(1/downscale_factor_h, 1/downscale_factor_w), mode='bilinear', align_corners=False)
-            
-            # 确保 HR_MSI_down 的尺寸与 LR_HSI_up 一致
-            # assert HR_MSI_down.shape[2:] == LR_HSI_up.shape[2:], "尺寸不匹配"
-            
-            # 提取特征
-
-            # hr_guide = self.image_encoder(HR_MSI_down)  # 提取下采样后的高分辨率图像特征
-            # feat = self.depth_encoder(LR_HSI)  # 提取当前 LR_HSI 特征
-            
-            # 查询与特征融合
-            # ret = self.query(LR_HSI_up, coord, hr_guide)
-
-            # LR_HSI_up = self.conv_1x1(LR_HSI_up)
-            
-            # 更新 LR_HSI
-            output = ret + lms            
-        # output = self.conv_layer(feat)
-        
-        return output
-
-
 
     def _forward_implem_(self, HR_MSI, lms, LR_HSI):
         # image, depth, coord, res, lr_image = data['image'], data['lr'], data['hr_coord'], data['lr_pixel'], data['lr_image']
