@@ -75,7 +75,7 @@ path:
     roadscene_tno_joint: "/data2/users/yujieliang/dataset/VIF-RoadScene_and_TNO"
 
 network_configs:
-  ENACIR_ENACIR:
+  EDACANet_EDACANet:
   ##################### Pansharpening #####################
     ## CAVE
     hsi_dim: 102 #31 #128 # 102 #31
@@ -88,18 +88,6 @@ network_configs:
     scale: 4
     patch_merge: yes
 
-  ENACIR_V2_ENACIR_V2:
-  ##################### Pansharpening #####################
-    ## CAVE
-    hsi_dim: 31
-    msi_dim: 3
-    feat_dim: 128
-    guide_dim: 128
-    spa_edsr_num: 3
-    spe_edsr_num: 3
-    mlp_dim: [256,128]
-    scale: 4
-    patch_merge: yes
 
 loss_cfg:
   l1ssim:
@@ -117,5 +105,5 @@ metric_name_for_save:
 
 logger_config:
   base_path: ./log_file/
-  name: ENACIR
+  name: EDACANet
   file_mode: w
