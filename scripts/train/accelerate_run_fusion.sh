@@ -12,11 +12,11 @@ accelerate_run_main.py \
 --proj_name EDACANet \
 -m 'EDACANet.EDACANet' \
 -c 'EDACANet_config.yaml' \
---dataset cave_x4 \
+--dataset pavia \
 --num_worker 6 -e 1000 --train_bs 4 --val_bs 1 \
 --aug_probs 0.0 0.0 --loss l1ssim --grad_accum_steps 1 \
 --val_n_epoch 10 \
 --checkpoint_every_n 10 \
---comment "EDACANet on cave_x4 dataset" \
+--comment "EDACANet on pavia dataset" \
 --logger_on \
 --sanity_check 
