@@ -3,8 +3,6 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import sys
-sys.path.insert(0, '/data2/users/yujieliang/exps/Efficient-MIF-back-master-6-feat')
 from model.module.fe_block import make_edsr_baseline, make_coord
 
 from model.base_model import BaseModel, register_model, PatchMergeModule
@@ -37,8 +35,8 @@ class MLP(nn.Module):
 
         
 
-@register_model('ENACIR')
-class ENACIR(BaseModel):
+@register_model('EDACANet')
+class EDACANet(BaseModel):
 
     def __init__(self, hsi_dim=31, msi_dim=3, feat_dim=128, guide_dim=128, spa_edsr_num=3, spe_edsr_num=3, mlp_dim=[256,128], scale = 4, n_heads=8, patch_merge=True, ):
         super().__init__()
@@ -350,7 +348,7 @@ if __name__ == '__main__':
 
     torch.cuda.set_device('cuda:6')
 
-    model = ENACIR(102 ,1 ,128, 128).cuda()
+    model = EDACANet(102 ,1 ,128, 128).cuda()
 
     B, C, H, W = 1, 102, 64, 64
     scale = 4
